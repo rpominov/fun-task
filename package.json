@@ -1,0 +1,30 @@
+{
+  "name": "task",
+  "version": "0.0.0",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "lobot": "lobot",
+    "lint": "eslint .",
+    "test": "eslint . && lobot test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rpominov/Task.git"
+  },
+  "author": "Roman Pominov <rpominov@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rpominov/Task/issues"
+  },
+  "homepage": "https://github.com/rpominov/Task#readme",
+  "devDependencies": {
+    "lobot": "0.1.11"
+  },
+  "jsnext:main": "lib-es/index.js",
+  "files": [
+    "lib",
+    "lib-es",
+    "umd"
+  ]
+}

@@ -1,0 +1,7 @@
+node_modules
+lib
+lib-es
+umd
+npm-debug.log
+.nyc_output
+.build-artefacts
