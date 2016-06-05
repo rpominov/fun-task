@@ -59,7 +59,7 @@ const Task = {
     return make('all', tasks)
   },
 
-  // Given array of tasks creates a task that completes with the earlier value or error
+  // Given array of tasks creates a task that completes with the earliest value or error
   race(tasks) {
     return make('race', tasks)
   },
