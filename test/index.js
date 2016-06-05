@@ -35,6 +35,25 @@ function catchWarnings(cb) {
 
 
 {
+  const task = Task.rejected(1)
+
+  test('rejected/ calls l cb', 1, t => {
+    Task.run(task, () => {}, t.calledWith(1))
+  })
+
+  test('rejected/ doesn\'t call r cb', 0, t => {
+    Task.run(task, t.fail, () => {})
+  })
+
+  test('rejected/ run returns a function', 1, t => {
+    const cancel = Task.run(task, () => {}, () => {})
+    t.equal(typeof cancel, 'function')
+  })
+
+}
+
+
+{
   test('create/ calls computation', 1, t => {
     Task.run(Task.create(t.calledOnce()), () => {}, () => {})
   })
@@ -126,5 +145,35 @@ function catchWarnings(cb) {
 
   test('map/ delegates cancelation', 1, t => {
     Task.run(Task.map(x => x, Task.create(() => t.calledOnce())), () => {}, () => {})()
+  })
+}
+
+
+{
+  test('chain/ works with chain(() => of(), of())', 1, t => {
+    const task = Task.chain(x => Task.of(x + 3), Task.of(2))
+    Task.run(task, t.calledWith(5), () => {})
+  })
+
+  test('chain/ works with chain(() => rejected(), of())', 1, t => {
+    const task = Task.chain(x => Task.rejected(x + 3), Task.of(2))
+    Task.run(task, () => {}, t.calledWith(5))
+  })
+
+  test('chain/ works with chain(..., rejected())', 1, t => {
+    const task = Task.chain(() => {}, Task.rejected(5))
+    Task.run(task, () => {}, t.calledWith(5))
+  })
+
+  test('chain/ delegates cancelation to parent', 1, t => {
+    const parent = Task.create(() => t.calledOnce())
+    const taks = Task.chain(() => {}, parent)
+    Task.run(taks, () => {}, () => {})()
+  })
+
+  test('chain/ delegates cancelation to child', 1, t => {
+    const child = Task.create(() => t.calledOnce())
+    const taks = Task.chain(() => child, Task.of(1))
+    Task.run(taks, () => {}, () => {})()
   })
 }

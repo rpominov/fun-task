@@ -18,7 +18,7 @@ const rejectW = () => {
   warn('reject() was called after a completion or a cancelation, this is a noop.')
 }
 
-const runComputation = (computation, r, l) => {
+const runComputation = (r, l, computation) => {
   let cancel, handleR, handleL, resolved
   const cleanup = () => {
     resolved = true
@@ -36,14 +36,13 @@ const runComputation = (computation, r, l) => {
   }
   resolved = false
   cancel = computation(x => { handleR(x) }, e => { handleL(e) })
-  if (typeof cancel !== 'function') {
-    cancel = () => {}
-  }
-  if (resolved) { // see (1)
-    cancel = noop
+  if (resolved) { // we need that extra logic with `resolved` because of (1)
+    return noop
   }
   return () => {
-    cancel()
+    if (typeof cancel === 'function') { // we allow computation to not return a cancel logic
+      cancel()
+    }
     cleanup()
   }
 }
@@ -55,8 +54,13 @@ const Strategy = {
     return noop
   },
 
+  rejected({error}, _, l) {
+    l(error)
+    return noop
+  },
+
   create({computation}, r, l) {
-    return runComputation(computation, r, l)
+    return runComputation(r, l, computation)
   },
 
   map({task, fn}, r, l) {
@@ -64,9 +68,15 @@ const Strategy = {
   },
 
   chain({task, fn}, r, l) {
-    runComputation(r, l, (r1, l1) => {
-      let cancel = run(task, result => { cancel = run(fn(result), r1, l1) }, l1)
-      return () => { cancel() }
+    return runComputation(r, l, (r1, l1) => {
+      let cancelChild = noop
+      const cancelParent = run(task, result => {
+        cancelChild = run(fn(result), r1, l1)
+      }, l1)
+      return () => {
+        cancelParent()
+        cancelChild()
+      }
     })
   },
 
