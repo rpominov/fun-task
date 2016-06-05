@@ -10,10 +10,6 @@ const warn = msg => {
   /* eslint-enable */
 }
 
-const cancelW = () => {
-  warn('cancel() was called after a completion or a cancelation, this is a noop.')
-}
-
 const resolveW = () => {
   warn('resolve() was called after a completion or a cancelation, this is a noop.')
 }
@@ -22,33 +18,45 @@ const rejectW = () => {
   warn('reject() was called after a completion or a cancelation, this is a noop.')
 }
 
+const runComputation = (computation, r, l) => {
+  let cancel, handleR, handleL, resolved
+  const cleanup = () => {
+    resolved = true
+    cancel = noop
+    handleR = resolveW
+    handleL = rejectW
+  }
+  handleR = result => {
+    cleanup() // (1) this line can be called _before_ computation() returns!
+    r(result)
+  }
+  handleL = error => {
+    cleanup()
+    l(error)
+  }
+  resolved = false
+  cancel = computation(x => { handleR(x) }, e => { handleL(e) })
+  if (typeof cancel !== 'function') {
+    cancel = () => {}
+  }
+  if (resolved) { // see (1)
+    cancel = noop
+  }
+  return () => {
+    cancel()
+    cleanup()
+  }
+}
+
 const Strategy = {
 
   of({value}, r) {
     r(value)
-    return cancelW
+    return noop
   },
 
   create({computation}, r, l) {
-    let cancel, handleR, handleL
-    const cleanup = () => {
-      cancel = cancelW
-      handleR = resolveW
-      handleL = rejectW
-    }
-    handleR = result => {
-      cleanup()
-      r(result)
-    }
-    handleL = error => {
-      cleanup()
-      l(error)
-    }
-    cancel = computation(x => { handleR(x) }, e => { handleL(e) })
-    return () => {
-      cancel()
-      cleanup()
-    }
+    return runComputation(computation, r, l)
   },
 
   map({task, fn}, r, l) {
@@ -56,30 +64,19 @@ const Strategy = {
   },
 
   chain({task, fn}, r, l) {
-    let cancel, cancelParent, cancelChild, handleR
-    cancel = () => {
-      cancelParent()
-      cancelChild()
-    }
-    const cleanup = () => {
-      cancel = cancelW
-    }
-    handleR = result => {
-      cancelParent = noop
-      cancelChild = run(fn(result), r, l)
-    }
-    cancelChild = noop
-    cancelParent = run(task, handleR, l)
-    return () => {
-      cancel()
-      cleanup()
-    }
-    // TODO: user will not always see 'cancel() was called after...' warning,
-    // we need to wrap some (all?) r and l before passing down
+    runComputation(r, l, (r1, l1) => {
+      let cancel = run(task, result => { cancel = run(fn(result), r1, l1) }, l1)
+      return () => { cancel() }
+    })
   },
 
 }
 
-const run = (task, cb) => Strategy[task.method](task.args, cb)
+const run = (task, r, l) => {
+  if (typeof r !== 'function' || typeof l !== 'function') {
+    throw new TypeError('You must provide both success and failure callbacks to run()')
+  }
+  return Strategy[task.method](task.args, r, l)
+}
 
 export default run
