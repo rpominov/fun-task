@@ -16,20 +16,20 @@ import Task from '../src'
 
 
 {
-  test('fromRunner/ calls runner', 1, t => {
-    Task.run(Task.fromRunner(t.calledOnce()), () => {})
+  test('create/ calls computation', 1, t => {
+    Task.run(Task.create(t.calledOnce()), () => {})
   })
 
-  test('fromRunner/ calls cb', 1, t => {
-    const task = Task.fromRunner(cb => {
+  test('create/ calls cb', 1, t => {
+    const task = Task.create(cb => {
       cb(1)
       return () => {}
     })
     Task.run(task, t.calledWith(1))
   })
 
-  test('fromRunner/ cancel gets called', 1, t => {
-    const task = Task.fromRunner(() => t.calledOnce())
+  test('create/ cancel gets called', 1, t => {
+    const task = Task.create(() => t.calledOnce())
     const cancel = Task.run(task, () => {})
     cancel()
   })
@@ -37,6 +37,7 @@ import Task from '../src'
   // TODO:
   //   cancel after completion
   //   double completion
+  //   computation doesn't return a function
 }
 
 
