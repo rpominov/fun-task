@@ -21,7 +21,7 @@ If we have a Promise:
  - We can get the result whenever it's ready
  - If two or more consumers have a same Promise they all will get the same result
 
-The last item is important. This is the key advantage of Promises over Tasks. Tasks don't have this feature. If two consumers have a same Task, each of them have to spawn their own versions of the computation in order to get the result, and they may even get different results.
+The last item is important. This is the key advantage of Promises over Tasks. Tasks don't have this feature. If two consumers have a same Task, each of them have to spawn their own instance of the computation in order to get the result, and they may even get different results.
 
 
 ## What is a computation?
