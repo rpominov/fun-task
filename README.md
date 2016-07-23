@@ -52,6 +52,7 @@ immediately, the computation starts only when `task.run()` is called
 | ---- | ------- |
 | `Task.create(computation)` | `new Promise(computation)` |
 | `Task.of(x)` | `Promise.resolve(x)`<br/><br/>With Promises behaviour is different if `x` is a Promise (this makes writing generic code more difficult with Promises) |
+| `Task.rejected(x)` | `Promise.reject(x)` |
 | `task.map(fn)` | `promise.then(fn)`<br/><br/>With Promises behaviour is different if `fn` retruns a Promise |
 | `task.chain(fn)` | `promise.then(fn)` |
 | `task.mapRejected(fn)` | `promise.then(undefined, fn)`<br/><br/>With Promises behaviour is different if `fn` retruns a Promise |
@@ -63,7 +64,7 @@ immediately, the computation starts only when `task.run()` is called
 | `Task.race(tasks)` | `Promise.race(promises)` |
 | `Task.run(onSuccess, onFailure)` | `Promise.then(onSuccess, onFailure)` |
 | `Task.runAndCatch(onSuccess, onFailure, onException)` | `Promise.then(onSuccess, onFailure)`<br/><br/>By default tasks don't catch exceptions thrown from `map`, `chain` etc. But we can choose to catch them by using `runAndCatch` instead of `run`. Also notice that exceptions go into their own callback. |
-| `const cancel = task.run(...); cancel()` | Promises don't support cancelation or even unsubscribing. |
+| `cancel = task.run(...); cancel()` | Promises don't support cancelation or even unsubscribing. |
 
 
 
