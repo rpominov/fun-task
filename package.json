@@ -1,7 +1,7 @@
 {
   "name": "task",
   "version": "0.0.0",
-  "description": "",
+  "description": "An abstraction for managing asynchronous code in JS",
   "main": "lib/index.js",
   "scripts": {
     "lobot": "lobot",
@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/rpominov/Task#readme",
   "devDependencies": {
-    "lobot": "0.1.11"
+    "lobot": "0.1.17"
   },
   "jsnext:main": "lib-es/index.js",
   "files": [
