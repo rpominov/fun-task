@@ -1,8 +1,8 @@
 // @flow
 
 type Cancel = () => void
-type Handler<T> = (x: T) => void
-type Computation<S, F> = (handleSucc: (s: S) => void, handleFail: (f: F) => void) => ?Cancel
+type Handler<+T> = (x: T) => void
+type Computation<+S, +F> = (handleSucc: (s: S) => void, handleFail: (f: F) => void) => ?Cancel
 
 const defaultFailureHandler = failure => {
   throw new Error(failure)
@@ -10,7 +10,7 @@ const defaultFailureHandler = failure => {
 
 const noop = () => {}
 
-export default class Task<S, F> {
+export default class Task<+S, +F> {
 
   constructor() {
     if (this.constructor === Task) {
@@ -30,24 +30,21 @@ export default class Task<S, F> {
 
   // Creates a task that rejects with a given error
   static rejected<S, F>(error: F): Task<S, F> {
-    // todo
-    return (null: any)
+    return new Rejected(error)
   }
 
   // Creates a task that never completes
   static empty(): Task<any, any> {
-    // todo
-    return (null: any)
+    return new Empty()
   }
 
   // Given array of tasks creates a task of array
-  static all<S, F>(task: Array<Task<S, F>>): Task<S[], F> {
-    // todo
-    return (null: any)
+  static all<S, F>(tasks: Array<Task<S, F>>): Task<S[], F> {
+    return new All(tasks)
   }
 
   // Given array of tasks creates a task that completes with the earliest value or error
-  static race<S, F>(task: Array<Task<S, F>>): Task<S, F> {
+  static race<So, Fo>(task: Array<Task<So, Fo>>): Task<So, Fo> {
     // todo
     return (null: any)
   }
@@ -84,11 +81,10 @@ export default class Task<S, F> {
 
   // Selects the earlier of the two tasks
   concat<S1, F1>(otherTask: Task<S1, F1>): Task<S | S1, F | F1> {
-    // todo
-    return (null: any)
+    return Task.race([this, otherTask])
   }
 
-  run(handleSucc: Handler<S>, handleFail?: Handler<F>): Cancel {
+  run(handleSucc: (x: S) => void, handleFail?: (x: F) => void): Cancel {
     throw new Error('Method run() is not implemented in basic Task class.')
   }
 
@@ -136,6 +132,59 @@ class Of<S, F> extends Task<S, F> {
   run(handleSucc: Handler<S>): Cancel {
     handleSucc(this._value)
     return noop
+  }
+
+}
+
+class Rejected<S, F> extends Task<S, F> {
+
+  _error: F;
+
+  constructor(error: F) {
+    super()
+    this._error = error
+  }
+
+  run(handleSucc: Handler<S>, handleFail: Handler<F> = defaultFailureHandler): Cancel {
+    handleFail(this._error)
+    return noop
+  }
+
+}
+
+class Empty<S, F> extends Task<S, F> {
+
+  run(): Cancel {
+    return noop
+  }
+
+}
+
+class All<S, F> extends Task<S[], F> {
+
+  _tasks: Array<Task<S, F>>;
+
+  constructor(tasks: Array<Task<S, F>>) {
+    super()
+    this._tasks = tasks
+  }
+
+  run(handleSucc: Handler<S[]>, handleFail?: Handler<F>): Cancel {
+    const length = this._tasks.length
+    let completedCount = 0
+    const values: Array<?S> = Array(length)
+    const cancels = this._tasks.map(
+      (task, index) => task.run(x => {
+        values[index] = x
+        completedCount++
+        if (completedCount === length) {
+          handleSucc(((values: any): S[]))
+        }
+      }, handleFail)
+    )
+    return () => {
+      cancels.forEach(cancel => cancel())
+    }
   }
 
 }

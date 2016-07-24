@@ -28,8 +28,8 @@ test('after a cuss, cancelation cb returned by computation isn\'t called ', 0, t
 })
 
 test('after a cuss, all calls of computation cbs are ignored', 1, t => {
-  let s
-  let f
+  let s = (null: any)
+  let f = (null: any)
   const task = Task.create((_s, _f) => {s = _s; f = _f})
   task.run(t.calledOnce(), t.fail)
   s()
@@ -38,8 +38,8 @@ test('after a cuss, all calls of computation cbs are ignored', 1, t => {
 })
 
 test('after a fail, all calls of computation cbs are ignored', 1, t => {
-  let s
-  let f
+  let s = (null: any)
+  let f = (null: any)
   const task = Task.create((_s, _f) => {s = _s; f = _f})
   task.run(t.fail, t.calledOnce())
   f()
@@ -48,8 +48,8 @@ test('after a fail, all calls of computation cbs are ignored', 1, t => {
 })
 
 test('after cancelation, all calls of computation cbs are ignored', 0, t => {
-  let s
-  let f
+  let s = (null: any)
+  let f = (null: any)
   const task = Task.create((_s, _f) => {s = _s; f = _f})
   task.run(t.fail, t.fail)()
   s()
