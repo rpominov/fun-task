@@ -9,17 +9,17 @@ Task is an abstraction similar to Promises. The key difference from Promises is 
 
 If we have a Task:
 
- - We can start the computation that it represents (e.g. a network request)
- - Although we can choose not to start the computation and just throw task away
- - Also we can start it more than once
- - While computation is running we can notify it that we don't interested in the result any more, and as a response computation can choose to terminate itself
- - When computation finishes we get the result
+- We can start the computation that it represents (e.g. a network request)
+- We can choose not to start the computation and just throw task away
+- We can start it more than once
+- While computation is running we can notify it that we don't interested in the result any more, and as a response computation can choose to terminate itself
+- When computation finishes we get the result
 
 If we have a Promise:
 
- - Computation is already running (or finished) and we don't have any control of it
- - We can get the result whenever it's ready
- - If two or more consumers have a same Promise they all will get the same result
+- Computation is already running (or finished) and we don't have any control of it
+- We can get the result whenever it's ready
+- If two or more consumers have a same Promise they all will get the same result
 
 The last item is important. This is the key advantage of Promises over Tasks. Tasks don't have this feature. If two consumers have a same Task, each of them have to spawn their own instance of the computation in order to get the result, and they may even get different results.
 
@@ -48,23 +48,23 @@ immediately, the computation starts only when `task.run()` is called
 
 ## API comparison with Promises
 
-| Task | Promise & comments |
-| ---- | ------- |
-| `Task.create(computation)` | `new Promise(computation)` |
-| `Task.of(x)` | `Promise.resolve(x)`<br/><br/>With Promises behaviour is different if `x` is a Promise (this makes writing generic code more difficult with Promises) |
-| `Task.rejected(x)` | `Promise.reject(x)` |
-| `task.map(fn)` | `promise.then(fn)`<br/><br/>With Promises behaviour is different if `fn` retruns a Promise |
-| `task.chain(fn)` | `promise.then(fn)` |
-| `task.mapRejected(fn)` | `promise.then(undefined, fn)`<br/><br/>With Promises behaviour is different if `fn` retruns a Promise |
-| `task.orElse(fn)` | `promise.then(undefined, fn)` |
-| `task.ap(otherTask)` | `Promise.all(promise, otherPromise).then(([fn, x]) => fn(x))`<br/><br/>This method exists mainly for compliance with [Fantasy Land Specification](https://github.com/fantasyland/fantasy-land) |
-| `Task.empty()` | `new Promise(() => {})` |
-| `task.concat(otherTask)` | `Promise.race([promose, otherPromise])`<br/><br/>Aslo mainly for Fantasy Land, makes Task a [Monoid](https://github.com/fantasyland/fantasy-land#monoid) |
-| `Task.all(tasks)` | `Promise.all(promises)` |
-| `Task.race(tasks)` | `Promise.race(promises)` |
-| `Task.run(onSuccess, onFailure)` | `Promise.then(onSuccess, onFailure)` |
+| Task                                     | Promise & comments                       |
+| ---------------------------------------- | ---------------------------------------- |
+| `Task.create(computation)`               | `new Promise(computation)`               |
+| `Task.of(x)`                             | `Promise.resolve(x)`<br/><br/>With Promises behaviour is different if `x` is a Promise (this makes writing generic code more difficult with Promises) |
+| `Task.rejected(x)`                       | `Promise.reject(x)`                      |
+| `task.map(fn)`                           | `promise.then(fn)`<br/><br/>With Promises behaviour is different if `fn` retruns a Promise |
+| `task.chain(fn)`                         | `promise.then(fn)`                       |
+| `task.mapRejected(fn)`                   | `promise.then(undefined, fn)`<br/><br/>With Promises behaviour is different if `fn` retruns a Promise |
+| `task.orElse(fn)`                        | `promise.then(undefined, fn)`            |
+| `task.ap(otherTask)`                     | `Promise.all(promise, otherPromise).then(([fn, x]) => fn(x))`<br/><br/>This method exists mainly for compliance with [Fantasy Land Specification](https://github.com/fantasyland/fantasy-land) |
+| `Task.empty()`                           | `new Promise(() => {})`                  |
+| `task.concat(otherTask)`                 | `Promise.race([promose, otherPromise])`<br/><br/>Aslo mainly for Fantasy Land, makes Task a [Monoid](https://github.com/fantasyland/fantasy-land#monoid) |
+| `Task.all(tasks)`                        | `Promise.all(promises)`                  |
+| `Task.race(tasks)`                       | `Promise.race(promises)`                 |
+| `Task.run(onSuccess, onFailure)`         | `Promise.then(onSuccess, onFailure)`     |
 | `Task.runAndCatch(onSuccess, onFailure, onException)` | `Promise.then(onSuccess, onFailure)`<br/><br/>By default tasks don't catch exceptions thrown from `map`, `chain` etc. But we can choose to catch them by using `runAndCatch` instead of `run`. Also notice that exceptions go into their own callback. |
-| `cancel = task.run(...); cancel()` | Promises don't support cancelation or even unsubscribing. |
+| `cancel = task.run(...); cancel()`       | Promises don't support cancelation or even unsubscribing. |
 
 
 
