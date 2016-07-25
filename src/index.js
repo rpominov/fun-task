@@ -1,7 +1,7 @@
 // @flow
 
 type Cancel = () => void
-type Handler<+T> = (x: T) => void
+type Handler<-T> = (x: T) => void
 type Computation<+S, +F> = (handleSucc: (s: S) => void, handleFail: (f: F) => void) => ?Cancel
 
 const defaultFailureHandler = failure => {
@@ -84,7 +84,7 @@ export default class Task<+S, +F> {
     return Task.race([this, otherTask])
   }
 
-  run(handleSucc: (x: S) => void, handleFail?: (x: F) => void): Cancel {
+  run(handleSucc: Handler<S>, handleFail?: Handler<F>): Cancel {
     throw new Error('Method run() is not implemented in basic Task class.')
   }
 
