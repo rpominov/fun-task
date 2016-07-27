@@ -50,14 +50,12 @@ export default class Task<+S, +F> {
 
   // Transforms a task by applying `fn` to the successful value
   map<S1>(fn: (x: S) => S1): Task<S1, F> {
-    // todo
-    return (null: any)
+    return new Map(this, fn)
   }
 
   // Transforms a task by applying `fn` to the failure value
   mapRejected<F1>(fn: (x: F) => F1): Task<S, F1> {
-    // todo
-    return (null: any)
+    return new MapRejected(this, fn)
   }
 
   // Transforms a task by applying `fn` to the successful value (where `fn` returns a Task)
@@ -241,4 +239,38 @@ class Race<S, F> extends Task<S, F> {
     return () => { close() }
   }
 
+}
+
+class Map<SIn, SOut, F> extends Task<SOut, F> {
+
+  _task: Task<SIn, F>;
+  _fn: (x: SIn) => SOut;
+
+  constructor(task: Task<SIn, F>, fn: (x: SIn) => SOut) {
+    super()
+    this._task = task
+    this._fn = fn
+  }
+
+  run(handleSucc: Handler<SOut>, handleFail?: Handler<F>): Cancel {
+    const {_fn} = this
+    return this._task.run(x => { handleSucc(_fn(x)) }, handleFail)
+  }
+}
+
+class MapRejected<S, FIn, FOut> extends Task<S, FOut> {
+
+  _task: Task<S, FIn>;
+  _fn: (x: FIn) => FOut;
+
+  constructor(task: Task<S, FIn>, fn: (x: FIn) => FOut) {
+    super()
+    this._task = task
+    this._fn = fn
+  }
+
+  run(handleSucc: Handler<S>, handleFail: Handler<FOut> = defaultFailureHandler): Cancel {
+    const {_fn} = this
+    return this._task.run(handleSucc, x => { handleFail(_fn(x)) })
+  }
 }
