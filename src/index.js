@@ -44,9 +44,8 @@ export default class Task<+S, +F> {
   }
 
   // Given array of tasks creates a task that completes with the earliest value or error
-  static race<So, Fo>(task: Array<Task<So, Fo>>): Task<So, Fo> {
-    // todo
-    return (null: any)
+  static race<S, F>(task: Array<Task<S, F>>): Task<S, F> {
+    return new Race(task)
   }
 
   // Transforms a task by applying `fn` to the successful value
@@ -75,8 +74,7 @@ export default class Task<+S, +F> {
 
   // Applies the successful value of task `withF` to to the successful value of task `withX`
   ap<F1>(otherTask: Task<any, F1>): Task<any, F | F1> {
-    // todo
-    return (null: any)
+    return Task.all([(this: Task<any, F>), otherTask]).map(([f, x]) => f(x))
   }
 
   // Selects the earlier of the two tasks
@@ -86,6 +84,18 @@ export default class Task<+S, +F> {
 
   run(handleSucc: Handler<S>, handleFail?: Handler<F>): Cancel {
     throw new Error('Method run() is not implemented in basic Task class.')
+  }
+
+  runAndCatch(handleSucc: Handler<S>, handleFail?: Handler<F>, handleThrown?: Handler<any>): Cancel {
+    // todo: not implemented on concrete classes
+    throw new Error('Method runAndCatch() is not implemented in basic Task class.')
+  }
+
+  runAndPrintResult(): void {
+    this.run(
+      x => console.log('Success:', x),
+      x => console.log('Failure:', x)
+    )
   }
 
 }
@@ -169,22 +179,66 @@ class All<S, F> extends Task<S[], F> {
     this._tasks = tasks
   }
 
-  run(handleSucc: Handler<S[]>, handleFail?: Handler<F>): Cancel {
+  run(handleSucc: Handler<S[]>, handleFail: Handler<F> = defaultFailureHandler): Cancel {
     const length = this._tasks.length
-    let completedCount = 0
     const values: Array<?S> = Array(length)
-    const cancels = this._tasks.map(
-      (task, index) => task.run(x => {
-        values[index] = x
-        completedCount++
-        if (completedCount === length) {
-          handleSucc(((values: any): S[]))
-        }
-      }, handleFail)
-    )
-    return () => {
-      cancels.forEach(cancel => cancel())
+    let completedCount = 0
+    let succ = handleSucc
+    let fail = handleFail
+    let cancel = noop
+    let closed = false
+    let cancelRest = noop
+    let close = () => {
+      cancelRest()
+      succ = noop
+      fail = noop
+      close = noop
+      closed = true
     }
+    const onSucc = () => { if (completedCount === length) { succ((values: any)); close() } }
+    const onFail = x => { fail(x); close() }
+    const cancels = this._tasks.map(
+      (task, index) => task.run(x => { values[index] = x; completedCount++; onSucc() }, onFail)
+    )
+    cancelRest = () => cancels.forEach(cancel => cancel())
+    if (closed) {
+      cancelRest()
+    }
+    return () => { close() }
+  }
+
+}
+
+class Race<S, F> extends Task<S, F> {
+
+  _tasks: Array<Task<S, F>>;
+
+  constructor(tasks: Array<Task<S, F>>) {
+    super()
+    this._tasks = tasks
+  }
+
+  run(handleSucc: Handler<S>, handleFail: Handler<F> = defaultFailureHandler): Cancel {
+    let succ = handleSucc
+    let fail = handleFail
+    let cancel = noop
+    let closed = false
+    let cancelRest = noop
+    let close = () => {
+      cancelRest()
+      succ = noop
+      fail = noop
+      close = noop
+      closed = true
+    }
+    const onSucc = x => { succ(x); close() }
+    const onFail = x => { fail(x); close() }
+    const cancels = this._tasks.map(task => task.run(onSucc, onFail))
+    cancelRest = () => cancels.forEach(cancel => cancel())
+    if (closed) {
+      cancelRest()
+    }
+    return () => { close() }
   }
 
 }

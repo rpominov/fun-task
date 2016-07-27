@@ -64,7 +64,7 @@ immediately, the computation starts only when `task.run()` is called
 | `Task.race(tasks)`                       | `Promise.race(promises)`                 |
 | `Task.run(onSuccess, onFailure)`         | `Promise.then(onSuccess, onFailure)`     |
 | `Task.runAndCatch(onSuccess, onFailure, onException)` | `Promise.then(onSuccess, onFailure)`<br/><br/>By default tasks don't catch exceptions thrown from `map`, `chain` etc. But we can choose to catch them by using `runAndCatch` instead of `run`. Also notice that exceptions go into their own callback. |
-| `cancel = task.run(...); cancel()`       | Promises don't support cancelation or even unsubscribing. |
+| `cancel = task.run(...); cancel()`       | Promises don't support cancelation or even unsubscribing |
 
 
 
