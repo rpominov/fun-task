@@ -68,8 +68,7 @@ export default class Task<+S, +F> {
 
   // Transforms a task by applying `fn` to the successful value (where `fn` returns a Task)
   chain<S1, F1>(fn: (x: S) => Task<S1, F1>): Task<S1, F | F1> {
-    // todo
-    return (null: any)
+    return new Chain(this, fn)
   }
 
   // Transforms a task by applying `fn` to the failure value (where `fn` returns a Task)
@@ -121,15 +120,20 @@ class FromComputation<S, F> extends Task<S, F> {
     let cancel = noop
     let closed = false
     let close = () => {
+      // The idea here (and in various places below) is to kill links to all stuff
+      // that we expose from the run() method closure. We expose via the return value
+      // (cancelation function) and by passing callbacks to the computation.
+      // We reason from an assumption that outer code may keep links to values that we exposed forever.
+      // So we look at all thing that referenced in the exposed callback and kill them.
       succ = noop
       fail = noop
       cancel = noop
       close = noop
       closed = true
     }
-    const _cancel = this._computation(x => { succ(x); close() }, x => { fail(x); close() })
-    if (!closed) {
-      cancel = _cancel || noop
+    cancel = this._computation(x => { succ(x); close() }, x => { fail(x); close() }) || noop
+    if (closed) {
+      cancel = noop
     }
     return () => { cancel(); close() }
   }
@@ -280,5 +284,45 @@ class MapRejected<S, FIn, FOut> extends Task<S, FOut> {
   run(handleSucc: Handler<S>, handleFail: Handler<FOut> = defaultFailureHandler): Cancel {
     const {_fn} = this
     return this._task.run(handleSucc, x => { handleFail(_fn(x)) })
+  }
+}
+
+class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
+
+  _task: Task<SIn, F>;
+  _fn: (x: SIn) => Task<SOut, F1>;
+
+  constructor(task: Task<SIn, F>, fn: (x: SIn) => Task<SOut, F1>) {
+    super()
+    this._task = task
+    this._fn = fn
+  }
+
+  run(handleSucc: Handler<SOut>, handleFail: Handler<F | F1> = defaultFailureHandler): Cancel {
+    const {_fn} = this
+    let succ = handleSucc
+    let fail = handleFail
+    let cancel1 = noop
+    let cancel2 = noop
+    let closed = false
+    let close = () => {
+      succ = noop
+      fail = noop
+      cancel1 = noop
+      cancel2 = noop
+      close = noop
+      closed = true
+    }
+    const onFail = x => { fail(x); close() }
+    cancel1 = this._task.run(x => {
+      cancel2 = _fn(x).run(x => { succ(x); close() }, onFail)
+      if (closed) {
+        cancel2 = noop
+      }
+    }, onFail)
+    if (closed) {
+      cancel1 = noop
+    }
+    return () => { cancel1(); cancel2(); close() }
   }
 }
