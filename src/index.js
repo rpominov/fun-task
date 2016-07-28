@@ -27,6 +27,10 @@ export default class Task<+S, +F> {
   static of<S, F>(value: S): Task<S, F> {
     return new Of(value)
   }
+  // instance alias for Fantasy Land
+  of<S, F>(value: S): Task<S, F> {
+    return Task.of(value)
+  }
 
   // Creates a task that rejects with a given error
   static rejected<S, F>(error: F): Task<S, F> {
@@ -36,6 +40,10 @@ export default class Task<+S, +F> {
   // Creates a task that never completes
   static empty(): Task<any, any> {
     return new Empty()
+  }
+  // instance alias for Fantasy Land
+  empty(): Task<any, any> {
+    return Task.empty()
   }
 
   // Given array of tasks creates a task of array

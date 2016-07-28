@@ -5,14 +5,20 @@
 
 An abstraction for managing asynchronous code in JS.
 
-Task is an abstraction similar to Promises. The key difference from Promises is that a Task represents a computation while a Promise represents only the result of a computation. Therefore if we have a Task we can: start the computation, terminate it before it finished, or wait until it finishes and get the result. While with a Promise we can only get the result. This difference don't make Tasks **better**, they are just different from Promises and we can find legitimate use cases for both abstractions. Let's review it again:
+Task is an abstraction similar to Promises. The key difference from Promises is that a
+Task represents a computation while a Promise represents only the result of a computation.
+Therefore if we have a Task we can: start the computation, terminate it before it finished,
+or wait until it finishes and get the result. While with a Promise we can only get the result.
+This difference don't make Tasks **better**, they are just different from Promises and we can
+find legitimate use cases for both abstractions. Let's review it again:
 
 If we have a Task:
 
 - We can start the computation that it represents (e.g. a network request)
 - We can choose not to start the computation and just throw task away
 - We can start it more than once
-- While computation is running we can notify it that we don't interested in the result any more, and as a response computation can choose to terminate itself
+- While computation is running we can notify it that we don't interested in the result any more,
+and as a response computation can choose to terminate itself
 - When computation finishes we get the result
 
 If we have a Promise:
@@ -21,7 +27,10 @@ If we have a Promise:
 - We can get the result whenever it's ready
 - If two or more consumers have a same Promise they all will get the same result
 
-The last item is important. This is the key advantage of Promises over Tasks. Tasks don't have this feature. If two consumers have a same Task, each of them have to spawn their own instance of the computation in order to get the result, and they may even get different results.
+The last item is important. This is the key advantage of Promises over Tasks.
+Tasks don't have this feature. If two consumers have a same Task, each of them have to spawn
+their own instance of the computation in order to get the result,
+and they may even get different results.
 
 
 ## What is a computation?
@@ -35,7 +44,7 @@ function computation(onSuccess, onFailure) {
 }
 ```
 
-Computation from Task API perspective is just a function that accepts two callbacks.
+From Task API perspective computation is just a function that accepts two callbacks.
 It should call one of those callbacks after completion with the final result.
 Also a computation may return a function with cancelation logic or it can return `undefined`
 if particular computation has no cancelation logic.
