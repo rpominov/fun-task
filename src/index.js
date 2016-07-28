@@ -10,6 +10,49 @@ const defaultFailureHandler = failure => {
 
 const noop = () => {}
 
+const safeRun = <S, F>(
+  computation: (succ: (s: S) => void, fail: (f: F) => void) => ?(Cancel | {cancel?: Cancel, onClose: Cancel}),
+  handleSucc: Handler<S>,
+  handleFail: Handler<F> = defaultFailureHandler
+): Cancel => {
+  let succ = handleSucc
+  let fail = handleFail
+  let cancel = noop
+  let onClose = noop
+  let closed = false
+  let close = () => {
+    onClose()
+    closed = true
+    // The idea here is to kill links to all stuff that we exposed from safeRun closure.
+    // We expose via the return value (cancelation function) and by passing callbacks to the computation.
+    // We reason from an assumption that outer code may keep links to values that we exposed forever.
+    // So we look at all thing that referenced in the exposed callback and kill them.
+    succ = noop
+    fail = noop
+    cancel = noop
+    close = noop
+  }
+  const computationReturn = computation(
+    x => { succ(x); close() },
+    x => { fail(x); close() }
+  )
+  if (computationReturn) {
+    if (typeof computationReturn === 'function') {
+      cancel = computationReturn
+    } else {
+      // this is called only when user cancels
+      cancel = computationReturn.cancel || noop
+      // this is called when user cancels plus when succ/fail are called
+      onClose = computationReturn.onClose
+    }
+  }
+  if (closed) {
+    cancel = noop
+    onClose()
+  }
+  return () => { cancel(); close() }
+}
+
 export default class Task<+S, +F> {
 
   constructor() {
@@ -114,28 +157,8 @@ class FromComputation<S, F> extends Task<S, F> {
     this._computation = computation
   }
 
-  run(handleSucc: Handler<S>, handleFail: Handler<F> = defaultFailureHandler): Cancel {
-    let succ = handleSucc
-    let fail = handleFail
-    let cancel = noop
-    let closed = false
-    let close = () => {
-      // The idea here (and in various places below) is to kill links to all stuff
-      // that we expose from the run() method closure. We expose via the return value
-      // (cancelation function) and by passing callbacks to the computation.
-      // We reason from an assumption that outer code may keep links to values that we exposed forever.
-      // So we look at all thing that referenced in the exposed callback and kill them.
-      succ = noop
-      fail = noop
-      cancel = noop
-      close = noop
-      closed = true
-    }
-    cancel = this._computation(x => { succ(x); close() }, x => { fail(x); close() }) || noop
-    if (closed) {
-      cancel = noop
-    }
-    return () => { cancel(); close() }
+  run(handleSucc: Handler<S>, handleFail?: Handler<F>): Cancel {
+    return safeRun(this._computation, handleSucc, handleFail)
   }
 
 }
@@ -189,32 +212,22 @@ class All<S, F> extends Task<S[], F> {
     this._tasks = tasks
   }
 
-  run(handleSucc: Handler<S[]>, handleFail: Handler<F> = defaultFailureHandler): Cancel {
-    const length = this._tasks.length
-    const values: Array<?S> = Array(length)
-    let completedCount = 0
-    let succ = handleSucc
-    let fail = handleFail
-    let cancel = noop
-    let closed = false
-    let cancelRest = noop
-    let close = () => {
-      cancelRest()
-      succ = noop
-      fail = noop
-      close = noop
-      closed = true
-    }
-    const onSucc = () => { if (completedCount === length) { succ((values: any)); close() } }
-    const onFail = x => { fail(x); close() }
-    const cancels = this._tasks.map(
-      (task, index) => task.run(x => { values[index] = x; completedCount++; onSucc() }, onFail)
-    )
-    cancelRest = () => cancels.forEach(cancel => cancel())
-    if (closed) {
-      cancelRest()
-    }
-    return () => { close() }
+  run(handleSucc: Handler<S[]>, handleFail?: Handler<F>): Cancel {
+    return safeRun((succ, fail) => {
+      const length = this._tasks.length
+      const values: Array<?S> = Array(length)
+      let completedCount = 0
+      const cancels = this._tasks.map(
+        (task, index) => task.run(x => {
+          values[index] = x
+          completedCount++
+          if (completedCount === length) {
+            succ((values: any))
+          }
+        }, fail)
+      )
+      return {onClose() { cancels.forEach(cancel => cancel()) }}
+    }, handleSucc, handleFail)
   }
 
 }
@@ -228,27 +241,11 @@ class Race<S, F> extends Task<S, F> {
     this._tasks = tasks
   }
 
-  run(handleSucc: Handler<S>, handleFail: Handler<F> = defaultFailureHandler): Cancel {
-    let succ = handleSucc
-    let fail = handleFail
-    let cancel = noop
-    let closed = false
-    let cancelRest = noop
-    let close = () => {
-      cancelRest()
-      succ = noop
-      fail = noop
-      close = noop
-      closed = true
-    }
-    const onSucc = x => { succ(x); close() }
-    const onFail = x => { fail(x); close() }
-    const cancels = this._tasks.map(task => task.run(onSucc, onFail))
-    cancelRest = () => cancels.forEach(cancel => cancel())
-    if (closed) {
-      cancelRest()
-    }
-    return () => { close() }
+  run(handleSucc: Handler<S>, handleFail?: Handler<F>): Cancel {
+    return safeRun((succ, fail) => {
+      const cancels = this._tasks.map(task => task.run(succ, fail))
+      return {onClose() { cancels.forEach(cancel => cancel()) }}
+    }, handleSucc, handleFail)
   }
 
 }
@@ -298,31 +295,12 @@ class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
     this._fn = fn
   }
 
-  run(handleSucc: Handler<SOut>, handleFail: Handler<F | F1> = defaultFailureHandler): Cancel {
+  run(handleSucc: Handler<SOut>, handleFail?: Handler<F | F1>): Cancel {
     const {_fn} = this
-    let succ = handleSucc
-    let fail = handleFail
-    let cancel1 = noop
-    let cancel2 = noop
-    let closed = false
-    let close = () => {
-      succ = noop
-      fail = noop
-      cancel1 = noop
-      cancel2 = noop
-      close = noop
-      closed = true
-    }
-    const onFail = x => { fail(x); close() }
-    cancel1 = this._task.run(x => {
-      cancel2 = _fn(x).run(x => { succ(x); close() }, onFail)
-      if (closed) {
-        cancel2 = noop
-      }
-    }, onFail)
-    if (closed) {
-      cancel1 = noop
-    }
-    return () => { cancel1(); cancel2(); close() }
+    return safeRun((succ, fail) => {
+      let cancel2 = noop
+      const cancel1 = this._task.run(x => { cancel2 = _fn(x).run(succ, fail) }, fail)
+      return () => { cancel1(); cancel2() }
+    }, handleSucc, handleFail)
   }
 }
