@@ -17,4 +17,10 @@ test('works with rejected + of', 1, t => {
   Task.rejected(2).chain(x => Task.of(x + 10)).run(t.fail, t.calledWith(2))
 })
 
-// TODO: more tests (cancelation etc.)
+test('cancelation works (orig. task)', 1, t => {
+  Task.create(() => t.calledOnce()).chain(() => Task.of()).run(() => {})()
+})
+
+test('cancelation works (spawned task)', 1, t => {
+  Task.of().chain(() => Task.create(() => t.calledOnce())).run(() => {})()
+})

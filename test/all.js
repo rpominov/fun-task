@@ -20,14 +20,14 @@ test('cancelation works', 2, t => {
   ]).run(() => {})()
 })
 
-test('after one task fails others a canceled (sync fail)', 1, t => {
+test('after one task fails others are canceled (sync fail)', 1, t => {
   Task.all([
     Task.rejected(2),
     Task.create(() => t.calledOnce()),
   ]).run(() => {}, () => {})
 })
 
-test('after one task fails others a canceled (async fail)', 1, t => {
+test('after one task fails others are canceled (async fail)', 1, t => {
   let f = (null: any)
   Task.all([
     Task.create((_, _f) => { f = _f }),
