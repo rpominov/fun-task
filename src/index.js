@@ -116,8 +116,7 @@ export default class Task<+S, +F> {
 
   // Transforms a task by applying `fn` to the failure value (where `fn` returns a Task)
   orElse<S1, F1>(fn: (x: F) => Task<S1, F1>): Task<S | S1, F1> {
-    // todo
-    return (null: any)
+    return new OrElse(this, fn)
   }
 
   // Applies the successful value of task `withF` to to the successful value of task `withX`
@@ -300,6 +299,27 @@ class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
     return safeRun((succ, fail) => {
       let cancel2 = noop
       const cancel1 = this._task.run(x => { cancel2 = _fn(x).run(succ, fail) }, fail)
+      return () => { cancel1(); cancel2() }
+    }, handleSucc, handleFail)
+  }
+}
+
+class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
+
+  _task: Task<S, FIn>;
+  _fn: (x: FIn) => Task<S1, FOut>;
+
+  constructor(task: Task<S, FIn>, fn: (x: FIn) => Task<S1, FOut>) {
+    super()
+    this._task = task
+    this._fn = fn
+  }
+
+  run(handleSucc: Handler<S | S1>, handleFail?: Handler<FOut>): Cancel {
+    const {_fn} = this
+    return safeRun((succ, fail) => {
+      let cancel2 = noop
+      const cancel1 = this._task.run(succ, x => { cancel2 = _fn(x).run(succ, fail) })
       return () => { cancel1(); cancel2() }
     }, handleSucc, handleFail)
   }
