@@ -56,6 +56,14 @@ test('after cancelation, all calls of computation cbs are ignored', 0, t => {
   f()
 })
 
+test('exception thrown from computation (no catch cb)', 1, t => {
+  t.throws(() => Task.create(() => { throw new Error('err1') }).run({}), /err1/)
+})
+
+test('exception thrown from computation (with catch cb)', 1, t => {
+  Task.create(() => { throw 2 }).run({catch: t.calledWith(2)})
+})
+
 test('new Task() throws', 1, t => {
   t.throws(() => new Task(), /Task\.create/)
 })
