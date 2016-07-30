@@ -6,5 +6,5 @@ import Task from '../src'
 const test = _test.wrap('empty')
 
 test('doens\'t call cbs', 0, t => {
-  Task.empty().run(t.fail, t.fail)
+  Task.empty().run({success: t.fail, failure: t.fail})
 })
