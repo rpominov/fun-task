@@ -14,9 +14,12 @@ type LooseHandlers<-S, -F> = Handler<S> | {
 }
 type Computation<+S, +F> = (handleSucc: Handler<S>, handleFail: Handler<F>) => ?Cancel
 
-
 const defaultFailureHandler = failure => {
-  throw new Error(failure)
+  if (failure instanceof Error) {
+    throw failure
+  } else {
+    throw new Error(String(failure))
+  }
 }
 const noop = () => {}
 const noopHandlers: Handlers<any, any> = {
@@ -146,7 +149,7 @@ export default class Task<+S, +F> {
 
   run(h: LooseHandlers<S, F>): Cancel {
     const handlers = typeof h === 'function'
-      ? {success: h, failure: noop}
+      ? {success: h, failure: defaultFailureHandler}
       : {success: h.success || noop, failure: h.failure || defaultFailureHandler, catch: h.catch}
     return this._run(handlers)
   }
