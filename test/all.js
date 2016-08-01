@@ -35,3 +35,24 @@ test('after one task fails others are canceled (async fail)', 1, t => {
   ]).run({failure(){}})
   f()
 })
+
+const of1 = Task.of(1)
+const thrower1 = Task.create(() => { throw new Error('err1') })
+const thrower2 = Task.create(() => { throw 2 })
+
+test('exception thrown in a child task (no catch cb)', 2, t => {
+  t.throws(() => {
+    Task.all([of1, thrower1]).run({})
+  }, /err1/)
+  t.throws(() => {
+    Task.all([thrower1, of1]).run({})
+  }, /err1/)
+})
+
+test('exception thrown in a child task (with catch cb, exception is the first completion)', 1, t => {
+  Task.all([thrower2, of1]).run({catch: t.calledWith(2), success: t.fail})
+})
+
+test('exception thrown in a child task (with catch cb, exception is the second completion)', 1, t => {
+  Task.all([of1, thrower2]).run({catch: t.calledWith(2), success: t.fail})
+})

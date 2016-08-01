@@ -14,78 +14,32 @@ type LooseHandlers<-S, -F> = Handler<S> | {
 }
 type Computation<+S, +F> = (handleSucc: Handler<S>, handleFail: Handler<F>) => ?Cancel
 
-const defaultFailureHandler = failure => {
+const defaultFailureHandler: Handler<mixed> = failure => {
   if (failure instanceof Error) {
     throw failure
   } else {
-    throw new Error(String(failure))
+    throw new Error(`Unhandled task failure: ${String(failure)}`)
   }
 }
 const noop = () => {}
-const noopHandlers: Handlers<any, any> = {
-  success: noop,
-  failure: noop,
-}
 
-const safeRun = <S, F>(
-  computation: (succ: (s: S) => void, fail: (f: F) => void) => ?(Cancel | {cancel?: Cancel, onClose: Cancel}),
-  _handlers: Handlers<S, F>,
-): Cancel => {
-  let handlers = _handlers
-  let cancel = noop
-  let onClose = noop
-  let closed = false
-  let close = () => {
-    onClose()
-    closed = true
-    // The idea here is to kill links to all stuff that we exposed from safeRun closure.
-    // We expose via the return value (cancelation function) and by passing callbacks to the computation.
-    // We reason from an assumption that outer code may keep links to values that we exposed forever.
-    // So we look at all thing that referenced in the exposed callback and kill them.
-    handlers = noopHandlers
-    cancel = noop
-    close = noop
-  }
-  const computationReturn = computation(
-    x => { handlers.success(x); close() },
-    x => { handlers.failure(x); close() }
-  )
-  if (computationReturn) {
-    if (typeof computationReturn === 'function') {
-      cancel = computationReturn
-    } else {
-      // this is called only when user cancels
-      cancel = computationReturn.cancel || noop
-      // this is called when user cancels plus when succ/fail are called
-      onClose = computationReturn.onClose
-    }
-  }
-  if (closed) {
-    cancel = noop
-    onClose()
-  }
-  return () => { cancel(); close() }
-}
-
-type SafeRunBody<S, F> = (s: Handler<S>, f: Handler<F>, c?: Handler<any>) => {
+type RunHelperBody<S, F> = (s: Handler<S>, f: Handler<F>, c?: Handler<any>) => {
   onCancel?: Cancel, // called only when user cancels
   onClose?: Cancel, // called when user cancels plus when succ/fail/catch are called
 }
-const safeRun2 = <S, F>(body: SafeRunBody<S, F>, handlers: Handlers<S, F>): Cancel => {
+const runHelper = <S, F>(body: RunHelperBody<S, F>, handlers: Handlers<S, F>): Cancel => {
   let {success, failure, catch: catch_} = handlers
   let onCancel = noop
   let onClose = noop
-  let closed = false
   let close = () => {
     onClose()
-    closed = true
-    // The idea here is to kill links to all stuff that we exposed from safeRun closure.
-    // We expose via the return value (cancelation function) and by passing callbacks to the computation.
+    // The idea here is to kill links to all stuff that we exposed from runHelper closure.
+    // We expose via the return value (cancelation function) and by passing callbacks to the body.
     // We reason from an assumption that outer code may keep links to values that we exposed forever.
-    // So we look at all thing that referenced in the exposed callback and kill them.
+    // So we look at all things that referenced in the exposed callbacks and kill them.
     success = noop
     failure = noop
-    catch_ = catch_ && noop
+    catch_ = noop
     onCancel = noop
     close = noop
   }
@@ -96,7 +50,7 @@ const safeRun2 = <S, F>(body: SafeRunBody<S, F>, handlers: Handlers<S, F>): Canc
   )
   onCancel = bodyReturn.onCancel || noop
   onClose = bodyReturn.onClose || noop
-  if (closed) {
+  if (close === noop) {
     onCancel = noop
     onClose()
   }
@@ -193,10 +147,10 @@ export default class Task<+S, +F> {
   }
 
   runAndPrintResult(): void {
-    this.run(
-      x => console.log('Success:', x),
-      x => console.log('Failure:', x)
-    )
+    this.run({
+      success(x) { console.log('Success:', x) },
+      failure(x) { console.log('Failure:', x) }
+    })
   }
 
 }
@@ -211,14 +165,15 @@ class FromComputation<S, F> extends Task<S, F> {
   }
 
   _run(handlers: Handlers<S, F>) {
-    return safeRun2((s, f, c) => {
+    const {_computation} = this
+    return runHelper((s, f, c) => {
       let cancel
       if (c) {
         try {
-          cancel = this._computation(s, f)
+          cancel = _computation(s, f)
         } catch (e) { c(e) }
       } else {
-        cancel = this._computation(s, f)
+        cancel = _computation(s, f)
       }
       return {onCancel: cancel || noop}
     }, handlers)
@@ -280,7 +235,7 @@ class All<S, F> extends Task<S[], F> {
   }
 
   _run(handlers: Handlers<S[], F>): Cancel {
-    return safeRun((success, failure) => {
+    return runHelper((s, f, c) => {
       const length = this._tasks.length
       const values: Array<?S> = Array(length)
       let completedCount = 0
@@ -289,10 +244,11 @@ class All<S, F> extends Task<S[], F> {
           values[index] = x
           completedCount++
           if (completedCount === length) {
-            success((values: any))
+            s((values: any))
           }
         },
-        failure,
+        failure: f,
+        catch: c,
       })
       const cancels = this._tasks.map(runTask)
       return {onClose() { cancels.forEach(cancel => cancel()) }}
@@ -311,7 +267,7 @@ class Race<S, F> extends Task<S, F> {
   }
 
   _run(handlers: Handlers<S, F>): Cancel {
-    return safeRun((success, failure) => {
+    return runHelper((success, failure) => {
       const handlers = {success, failure}
       const cancels = this._tasks.map(task => task.run(handlers))
       return {onClose() { cancels.forEach(cancel => cancel()) }}
@@ -373,16 +329,20 @@ class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
 
   _run(handlers: Handlers<SOut, F | F1>): Cancel {
     const {_fn} = this
-    return safeRun2((success, failure, catch_) => {
+    return runHelper((success, failure, catch_) => {
       let cancel2 = noop
       const cancel1 = this._task.run({
         success(x) {
+          let spawned
           if (catch_) {
             try {
-              cancel2 = _fn(x).run({success, failure, catch: catch_})
+              spawned = _fn(x)
             } catch (e) { catch_(e) }
           } else {
-            cancel2 = _fn(x).run({success, failure})
+            spawned = _fn(x)
+          }
+          if (spawned) {
+            cancel2 = spawned.run({success, failure, catch: catch_})
           }
         },
         failure,
@@ -406,7 +366,7 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
 
   _run(handlers: Handlers<S | S1, FOut>): Cancel {
     const {_fn} = this
-    return safeRun((success, failure) => {
+    return runHelper((success, failure) => {
       let cancel2 = noop
       const cancel1 = this._task.run({
         success,
@@ -414,7 +374,8 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
           cancel2 = _fn(x).run({success, failure})
         }
       })
-      return () => { cancel1(); cancel2() }
+      return {onCancel() { cancel1(); cancel2() }}
     }, handlers)
+
   }
 }
