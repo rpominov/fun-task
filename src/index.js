@@ -191,7 +191,8 @@ class Of<S> extends Task<S, any> {
   }
 
   _run(handlers: Handlers<S, any>): Cancel {
-    handlers.success(this._value)
+    const {success} = handlers
+    success(this._value)
     return noop
   }
 
@@ -207,7 +208,8 @@ class Rejected<F> extends Task<any, F> {
   }
 
   _run(handlers: Handlers<any, F>): Cancel {
-    handlers.failure(this._error)
+    const {failure} = handlers
+    failure(this._error)
     return noop
   }
 
@@ -289,8 +291,9 @@ class Map<SIn, SOut, F> extends Task<SOut, F> {
 
   _run(handlers: Handlers<SOut, F>): Cancel {
     const {_fn} = this
+    const {success} = handlers
     return this._task.run({
-      success(x) { handlers.success(_fn(x)) },
+      success(x) { success(_fn(x)) },
       failure: handlers.failure,
     })
   }
@@ -309,9 +312,10 @@ class MapRejected<S, FIn, FOut> extends Task<S, FOut> {
 
   _run(handlers: Handlers<S, FOut>): Cancel {
     const {_fn} = this
+    const {failure} = handlers
     return this._task.run({
       success: handlers.success,
-      failure(x) { handlers.failure(_fn(x)) },
+      failure(x) { failure(_fn(x)) },
     })
   }
 }

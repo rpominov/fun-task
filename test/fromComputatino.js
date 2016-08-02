@@ -67,3 +67,15 @@ test('exception thrown from computation (with catch cb)', 1, t => {
 test('new Task() throws', 1, t => {
   t.throws(() => new Task(), /Task\.create/)
 })
+
+test('this==undefined in success cb', 1, t => {
+  Task.create(s => s(2)).run({success() { t.equal(this, undefined) }})
+})
+
+test('this==undefined in failure cb', 1, t => {
+  Task.create((_, f) => f(2)).run({failure() { t.equal(this, undefined) }})
+})
+
+test('this==undefined in fn', 1, t => {
+  Task.create(function() { t.equal(this, undefined) }).run({})
+})

@@ -75,3 +75,15 @@ test('exception thrown from child task (no catch cb, async)', 1, t => {
   Task.of().chain(() => thrower).run({})
   t.throws(s, /err1/)
 })
+
+test('this==undefined in success cd', 1, t => {
+  Task.of(2).chain(x => Task.of(x)).run({success() { t.equal(this, undefined) }})
+})
+
+test('this==undefined in failure cd', 1, t => {
+  Task.rejected(2).chain(x => Task.of(x)).run({failure() { t.equal(this, undefined) }})
+})
+
+test('this==undefined in fn', 1, t => {
+  Task.of(2).chain(function(x) { t.equal(this, undefined); return Task.of(x) }).run({})
+})

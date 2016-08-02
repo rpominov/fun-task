@@ -12,3 +12,7 @@ test('passes value to cb', 1, t => {
 test('default onFail works', 1, t => {
   t.throws(() => { Task.rejected('err1').run({}) }, /err1/)
 })
+
+test('this==undefined in cd', 1, t => {
+  Task.rejected(2).run({failure() { t.equal(this, undefined) }})
+})

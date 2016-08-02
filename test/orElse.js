@@ -28,3 +28,15 @@ test('cancelation works (orig. task)', 1, t => {
 test('cancelation works (spawned task)', 1, t => {
   Task.rejected().orElse(() => Task.create(() => t.calledOnce())).run({})()
 })
+
+test('this==undefined in success cd', 1, t => {
+  Task.of(2).orElse(x => Task.rejected(x)).run({success() { t.equal(this, undefined) }})
+})
+
+test('this==undefined in failure cd', 1, t => {
+  Task.rejected(2).orElse(x => Task.rejected(x)).run({failure() { t.equal(this, undefined) }})
+})
+
+test('this==undefined in fn', 1, t => {
+  Task.rejected(2).orElse(function(x) { t.equal(this, undefined); return Task.of(x) }).run({})
+})

@@ -56,3 +56,11 @@ test('exception thrown in a child task (with catch cb, exception is the first co
 test('exception thrown in a child task (with catch cb, exception is the second completion)', 1, t => {
   Task.all([of1, thrower2]).run({catch: t.calledWith(2), success: t.fail})
 })
+
+test('this==undefined in success cd', 1, t => {
+  Task.all([Task.of(2)]).run({success() { t.equal(this, undefined) }})
+})
+
+test('this==undefined in failure cd', 1, t => {
+  Task.all([Task.rejected(2)]).run({failure() { t.equal(this, undefined) }})
+})

@@ -8,3 +8,7 @@ const test = _test.wrap('of')
 test('passes value to cb', 1, t => {
   Task.of(2).run(t.calledWith(2))
 })
+
+test('this==undefined in cd', 1, t => {
+  Task.of(2).run(function() { t.equal(this, undefined) })
+})
