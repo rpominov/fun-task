@@ -1,4 +1,4 @@
-### Project status: WIP, readme is ahead of code
+### Project status: WIP
 
 
 # Task
