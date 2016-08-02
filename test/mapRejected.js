@@ -20,3 +20,26 @@ test('this==undefined in failure cd', 1, t => {
 test('this==undefined in fn', 1, t => {
   Task.rejected(2).mapRejected(function(x) { t.equal(this, undefined); return x }).run({failure(){}})
 })
+
+const thrower1 = Task.create(() => { throw new Error('err1') })
+const thrower2 = Task.create(() => { throw 2 })
+
+test('exception thrown from parent task (no catch cb)', 1, t => {
+  t.throws(() => {
+    thrower1.mapRejected(x => x).run({})
+  }, /err1/)
+})
+
+test('exception thrown from parent task (with catch cb)', 1, t => {
+  thrower2.mapRejected(x => x).run({catch: t.calledWith(2)})
+})
+
+test('exception thrown from fn (no catch cb)', 1, t => {
+  t.throws(() => {
+    Task.rejected(1).mapRejected(x => { throw new Error('err1') }).run({})
+  }, /err1/)
+})
+
+test('exception thrown from fn (with catch cb)', 1, t => {
+  Task.rejected(1).mapRejected(x => { throw 2 }).run({catch: t.calledWith(2)})
+})

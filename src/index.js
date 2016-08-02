@@ -291,10 +291,24 @@ class Map<SIn, SOut, F> extends Task<SOut, F> {
 
   _run(handlers: Handlers<SOut, F>): Cancel {
     const {_fn} = this
-    const {success} = handlers
+    const {success, failure, catch: catch_} = handlers
     return this._task.run({
-      success(x) { success(_fn(x)) },
-      failure: handlers.failure,
+      success(x) {
+        let value
+        if (catch_) {
+          try {
+            value = _fn(x)
+          } catch (e) {
+            catch_(e)
+            return
+          }
+        } else {
+          value = _fn(x)
+        }
+        success(value)
+      },
+      failure,
+      catch: catch_,
     })
   }
 }
@@ -312,10 +326,24 @@ class MapRejected<S, FIn, FOut> extends Task<S, FOut> {
 
   _run(handlers: Handlers<S, FOut>): Cancel {
     const {_fn} = this
-    const {failure} = handlers
+    const {success, failure, catch: catch_} = handlers
     return this._task.run({
-      success: handlers.success,
-      failure(x) { failure(_fn(x)) },
+      success,
+      failure(x) {
+        let value
+        if (catch_) {
+          try {
+            value = _fn(x)
+          } catch (e) {
+            catch_(e)
+            return
+          }
+        } else {
+          value = _fn(x)
+        }
+        failure(value) 
+      },
+      catch: catch_,
     })
   }
 }
@@ -370,13 +398,24 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
 
   _run(handlers: Handlers<S | S1, FOut>): Cancel {
     const {_fn} = this
-    return runHelper((success, failure) => {
+    return runHelper((success, failure, catch_) => {
       let cancel2 = noop
       const cancel1 = this._task.run({
         success,
         failure(x) {
-          cancel2 = _fn(x).run({success, failure})
-        }
+          let spawned
+          if (catch_) {
+            try {
+              spawned = _fn(x)
+            } catch (e) { catch_(e) }
+          } else {
+            spawned = _fn(x)
+          }
+          if (spawned) {
+            cancel2 = spawned.run({success, failure, catch: catch_})
+          }
+        },
+        catch: catch_,
       })
       return {onCancel() { cancel1(); cancel2() }}
     }, handlers)

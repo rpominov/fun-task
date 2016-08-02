@@ -25,10 +25,6 @@ test('cancelation works (spawned task)', 1, t => {
   Task.of().chain(() => Task.create(() => t.calledOnce())).run({})()
 })
 
-
-
-// Exceptions
-
 test('exception thrown from fn (no catch cb)', 1, t => {
   t.throws(() => {
     Task.of().chain(() => { throw new Error('err1') }).run({})
