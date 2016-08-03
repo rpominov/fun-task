@@ -60,7 +60,7 @@ So IMO in case of a browser the best option might be is to do nothing at all abo
 
 What about Node? First of all, have to say that I'm not really an expert in Node or other server side technologies. But I have some expirience. With that said let's continue. We could restart the server on each unhandled exception, but this is problematic because server usually handles several requests concurently at the same time. So if we restart the server not only request that faced a bug will fail, but all other requests that happen to be handled at the same time will fail as well. Perhaps a better approach, and what is usually done, is to wrap all the code that responsible for handling each request to some sort of `try...catch` block and when a error happens fail only one request. Although we can't use `try...catch` of course because the code is asynchronous. So we should use some async abstraction that can provide this functionality (e.g. Promises).
 
-Another option for Node is to let server crash. Yes, this will result in forcefully ending the execution of all other connections, resulting in more than a single user getting an error. But we will benefit from the crash by taking heap snapshots etc.
+Another option for Node is to let server crash. Yes, this will result in forcefully ending the execution of all other connections, resulting in more than a single user getting an error. But we will benefit from the crash by taking core dumps (`node --abort_on_uncaught_exception`) etc.
 
 Also in Node we can use the `uncaughtException` event combined with a tool like [naught](https://github.com/andrewrk/naught). Here is a qoute from naught docs:
 
