@@ -60,6 +60,12 @@ So IMO in case of a browser the best option might be is to do nothing at all abo
 
 What about Node? First of all, have to say that I'm not really an expert in Node or other server side technologies. But I have some expirience. With that said let's continue. We could restart the server on each unhandled exception, but this is problematic because server usually handles several requests concurently at the same time. So if we restart the server not only request that faced a bug will fail, but all other requests that happen to be handled at the same time will fail as well. Perhaps a better approach, and what is usually done, is to wrap all the code that responsible for handling each request to some sort of `try...catch` block and when a error happens fail only one request. Although we can't use `try...catch` of course because the code is asynchronous. So we should use some async abstraction that can provide this functionality (e.g. Promises).
 
+Another option for Node is to let server crash. Yes, this will result in forcefully ending the execution of all other connections, resulting in more than a single user getting an error. But we will benefit from the crash by taking heap snapshots etc.
+
+Also in Node we can use the `uncaughtException` event combined with a tool like [naught](https://github.com/andrewrk/naught). Here is a qoute from naught docs:
+
+> Using naught a worker can use the 'offline' message to announce that it is dying. At this point, naught prevents it from accepting new connections and spawns a replacement worker, allowing the dying worker to finish up with its current connections and do any cleanup necessary before finally perishing.
+
 This is how a bug can be handled in a program. But more importantly we should _fix_ bugs! In order to do so we need to find out about them, therefore a really good idea will be to setup some kind of automated reporting system (e.g. Sentry). This can and should be done in both cases in browser and on the server (this is the _one thing_ I mentioned earlier). Also if we want to debug bugs it's important that code that handles bugs don't stay in our way (more on it later).
 
 ## What is problematic about Promises
@@ -86,7 +92,7 @@ Although we don't need Promises to catch exceptions they do it anyway, and this 
 
 **Bugs go into the same callback with expected failures.** As mentioned above we don't want bugs to go into any callback at all. Unfortunately in promises we have only one callback for all kinds of failures. If we expect some failures from a promise (like network errors for example), we have to use `failure` callback to handle them. But if we use a `failure` callback everything mentioned about awesome debugging experience is no longer the case. So in the callback we have to separate bugs from the expected failures and handle them differentelly. This is not always easy and needs to be done in every failure callback. Also this [makes it imposible](https://github.com/facebook/flow/issues/1232) to type Promises with type systems like [Flow](https://flowtype.org/) — we have to use type `any` for argument of failure callback. Which BTW makes task of reliably separating expected failures from bugs even harder.
 
-What about Node environment? As concluded earlier in node we may want to catch all exceptions related to handling of a particular request. So how Promises work comes in handy here. But again it would be better to have a separate callback for bugs because of problems with Flow etc.
+What about Node environment? As concluded earlier in Node we may want to catch all exceptions related to handling of a particular request, although there other options. So how Promises work may come in handy here. But again it would be better to have a separate callback for bugs because of problems with Flow etc.
 
 Also automatic catching is needed for `async/await`, the idea is that we want to be able to write a code like this:
 
@@ -172,6 +178,6 @@ task.run({
 
 So if `catch` callback isn't provided, we can enjoy great debugging expirience in a browser (even if we have `failure` callback). And in Node we can still catch exceptions in async code if we want to. Also notice that we use a separate callback for exceptions, so no problems with Flow etc.
 
-The default behaviour is to not catch exceptions. This is what we want in browser, and what also may be a legitimate option for Node. After all we have been writing async code in Node using callbacks before Promises, and still often do, and exceptions doesn't seem to be a big issue.
+The default behaviour is to not catch exceptions. This is what we want in browser, and what also may be a legitimate option for Node.
 
 In Task the `catch` callback is reserved only for bug-exceptions. Expected exception must be wrappend in a `try...catch` block manually (see example with `JSON.parse()` above). All the API and semantics in Task are designed with this assumption in mind.
