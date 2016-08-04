@@ -36,10 +36,6 @@ test('after one task comletes others a canceled (async complete)', 1, t => {
   s()
 })
 
-test('concat is an alias for race', 1, t => {
-  Task.of(1).concat(Task.of(2)).run(t.calledWith(1))
-})
-
 test('this==undefined in success cd', 1, t => {
   Task.race([Task.of(2)]).run({success() { t.equal(this, undefined) }})
 })

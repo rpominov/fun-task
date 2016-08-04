@@ -5,10 +5,6 @@ import Task from '../src'
 
 const test = _test.wrap('fromComputation')
 
-test('default onFail cb in run works', 1, t => {
-  t.throws(() => Task.create((s, f) => f('err1')).run({}), /err1/)
-})
-
 test('succ value from computation is passed to run() cb', 1, t => {
   Task.create(s => s(2)).run(t.calledWith(2))
 })
@@ -62,10 +58,6 @@ test('exception thrown from computation (no catch cb)', 1, t => {
 
 test('exception thrown from computation (with catch cb)', 1, t => {
   Task.create(() => { throw 2 }).run({catch: t.calledWith(2)})
-})
-
-test('new Task() throws', 1, t => {
-  t.throws(() => new Task(), /Task\.create/)
 })
 
 test('this==undefined in success cb', 1, t => {
