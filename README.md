@@ -7,8 +7,27 @@ from Functional Programming). The type that library implements in docs usually r
 
 ## Installation
 
+### NPM
+
 ```
 npm install fun-task
+```
+
+```js
+// modern JavaScritp
+import Task from 'fun-task'
+
+// classic JavaScript
+var Task = require('fun-task')
+```
+
+### CDN
+
+```html
+<script src="https://npmcdn.com/fun-task/umd/funTask.js"></script>
+<script>
+  var Task = window.FunTask
+</script>
 ```
 
 ## Intro
