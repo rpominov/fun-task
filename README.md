@@ -3,7 +3,7 @@
 An abstraction for managing asynchronous code in JS.
 
 \* The name is an abbreviation for "functional task" (this library is based on many ideas
-from Functional Programming). The type that library implements in docs is usually referred as just Task.
+from Functional Programming). The type that library implements is usually referred as just Task in docs.
 
 
 ## Installation
@@ -87,7 +87,7 @@ immediately, the computation starts only when `task.run()` is called
 ## Documentation
 
 - API reference (WIP)
-- [How exceptions catching work in Task](docs/exceptions.md)
+- [How exceptions catching work in Task](docs/exceptions.md#how-exceptions-work-in-task)
 - [API comparison with Promises](docs/promise-vs-task-api.md)
 
 

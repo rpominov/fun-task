@@ -147,7 +147,7 @@ Here is some more criticism on how Promises handle exceptions:
 2. https://gist.github.com/thejameskyle/1222be21ef1023119222f10666b143aa
 
 
-## How exceptions work in [Task](https://github.com/rpominov/Task)
+## How exceptions work in Task
 
 In Task we have best of both worlds. We can choose whether exceptions will be catched or not when we `run()` a task.
 
