@@ -1,12 +1,17 @@
-### Project status: WIP
-
-
 # fun-task* [![Build Status](https://travis-ci.org/rpominov/fun-task.svg?branch=master)](https://travis-ci.org/rpominov/fun-task) [![Coverage Status](https://coveralls.io/repos/github/rpominov/fun-task/badge.svg?branch=master)](https://coveralls.io/github/rpominov/fun-task?branch=master)
 
 An abstraction for managing asynchronous code in JS.
 
 \* The name is an abbreviation for "functional task" (this library is based on many ideas
 from Functional Programming). The type that library implements in docs usually referred as just Task.
+
+## Installation
+
+```
+npm install fun-task
+```
+
+## Intro
 
 Task is an abstraction similar to Promises. The key difference from Promises is that a
 Task represents a computation while a Promise represents only the result of a computation.
