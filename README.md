@@ -86,7 +86,7 @@ immediately, the computation starts only when `task.run()` is called
 
 ## Documentation
 
-- [API reference](#todo)
+- API reference (WIP)
 - [How exceptions catching work in Task](docs/exceptions.md)
 - [API comparison with Promises](docs/promise-vs-task-api.md)
 
