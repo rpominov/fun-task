@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/rpominov/fun-task#readme",
   "devDependencies": {
+    "eslint": "2.13.1",
     "lobot": "0.1.17"
   },
   "jsnext:main": "lib-es/index.js",
