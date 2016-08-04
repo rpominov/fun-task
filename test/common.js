@@ -21,3 +21,14 @@ test('default onFail cb throws the same Error if argument is an Error', 1, t => 
     t.ok(e === _e)
   }
 })
+
+test('runAndLog works (success)', 0, () => {
+  // something goes sideways if we try to mock console,
+  // so we just check that method exists and runs fine
+  Task.of(2).runAndLog()
+})
+
+test('runAndLog works (failure)', 0, () => {
+  // same deal...
+  Task.rejected(2).runAndLog()
+})

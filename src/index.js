@@ -146,7 +146,7 @@ export default class Task<+S, +F> {
     return this._run(handlers)
   }
 
-  runAndPrintResult(): void {
+  runAndLog(): void {
     this.run({
       success(x) { console.log('Success:', x) }, // eslint-disable-line
       failure(x) { console.log('Failure:', x) }, // eslint-disable-line
