@@ -3,7 +3,7 @@
 ## `Task.create(computation)`
 
 Creates a Task from a computation. Computation is a function that accepts two callbacks.
-It should call one of those callbacks after completion with the final result (success or failure).
+It should call one of them after completion with the final result (success or failure).
 Also a computation may return a function with cancellation logic
 or it can return `undefined` if there is no cancellation logic.
 
@@ -92,14 +92,14 @@ TODO
 
 TODO
 
-## `Task.concat(otherTask)`
+## `task.concat(otherTask)`
 
 TODO
 
-## `Task.run(handlers)`
+## `task.run(handlers)`
 
 TODO
 
-## `Task.runAndLog()`
+## `task.runAndLog()`
 
 TODO

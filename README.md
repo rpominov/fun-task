@@ -74,7 +74,7 @@ function computation(onSuccess, onFailure) {
 ```
 
 From Task API perspective computation is just a function that accepts two callbacks.
-It should call one of those callbacks after completion with the final result.
+It should call one of them after completion with the final result.
 Also a computation may return a function with cancellation logic or it can return `undefined`
 if particular computation has no cancellation logic.
 
