@@ -125,7 +125,7 @@ export default class Task<+S, +F> {
     return new OrElse(this, fn)
   }
 
-  // Applies the successful value of task `withF` to to the successful value of task `withX`
+  // Applies the successful value of task `this` to to the successful value of task `otherTask`
   ap<F1>(otherTask: Task<any, F1>): Task<any, F | F1> {
     return Task.all([(this: Task<any, F>), otherTask]).map(([f, x]) => f(x))
   }
@@ -341,7 +341,7 @@ class MapRejected<S, FIn, FOut> extends Task<S, FOut> {
         } else {
           value = _fn(x)
         }
-        failure(value) 
+        failure(value)
       },
       catch: catch_,
     })

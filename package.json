@@ -1,5 +1,5 @@
 {
-  "name": "task",
+  "name": "fun-task",
   "version": "0.0.0",
   "description": "An abstraction for managing asynchronous code in JS",
   "main": "lib/index.js",
@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rpominov/Task.git"
+    "url": "git+https://github.com/rpominov/fun-task.git"
   },
   "author": "Roman Pominov <rpominov@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rpominov/Task/issues"
+    "url": "https://github.com/rpominov/fun-task/issues"
   },
-  "homepage": "https://github.com/rpominov/Task#readme",
+  "homepage": "https://github.com/rpominov/fun-task#readme",
   "devDependencies": {
     "lobot": "0.1.17"
   },

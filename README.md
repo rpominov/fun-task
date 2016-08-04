@@ -1,9 +1,12 @@
 ### Project status: WIP
 
 
-# Task
+# fun-task*
 
 An abstraction for managing asynchronous code in JS.
+
+\* The name is an abbreviation for "functional task" (this library is based on many ideas
+from Functional Programming). The type that library implements in docs usually referred as just Task.
 
 Task is an abstraction similar to Promises. The key difference from Promises is that a
 Task represents a computation while a Promise represents only the result of a computation.
