@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/rpominov/fun-task#readme",
   "devDependencies": {
+    "babel-eslint": "6.1.2",
     "eslint": "2.13.1",
     "lobot": "0.1.17"
   },
