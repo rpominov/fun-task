@@ -68,15 +68,15 @@ and they may even get different results.
 function computation(onSuccess, onFailure) {
   // ...
   return () => {
-    // ... cancelation logic
+    // ... cancellation logic
   }
 }
 ```
 
 From Task API perspective computation is just a function that accepts two callbacks.
 It should call one of those callbacks after completion with the final result.
-Also a computation may return a function with cancelation logic or it can return `undefined`
-if particular computation has no cancelation logic.
+Also a computation may return a function with cancellation logic or it can return `undefined`
+if particular computation has no cancellation logic.
 
 Creating a Task from a computation is easy, we just call `task = Task.create(computation)`.
 This is very similar to `new Promise(computation)`, but Task won't call `computation`
@@ -86,7 +86,7 @@ immediately, the computation starts only when `task.run()` is called
 
 ## Documentation
 
-- API reference (WIP)
+- [API reference](docs/api-reference.md)
 - [How exceptions catching work in Task](docs/exceptions.md#how-exceptions-work-in-task)
 - [API comparison with Promises](docs/promise-vs-task-api.md)
 
