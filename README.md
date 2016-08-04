@@ -1,7 +1,7 @@
 ### Project status: WIP
 
 
-# fun-task*
+# fun-task* [![Build Status](https://travis-ci.org/rpominov/fun-task.svg?branch=master)](https://travis-ci.org/rpominov/fun-task) [![Coverage Status](https://coveralls.io/repos/github/rpominov/fun-task/badge.svg?branch=master)](https://coveralls.io/github/rpominov/fun-task?branch=master)
 
 An abstraction for managing asynchronous code in JS.
 
