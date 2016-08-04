@@ -135,7 +135,7 @@ export default class Task<+S, +F> {
     return Task.race([this, otherTask])
   }
 
-  _run(handlers: Handlers<S, F>): Cancel {
+  _run(handlers: Handlers<S, F>): Cancel { // eslint-disable-line
     throw new Error('Method run() is not implemented in basic Task class.')
   }
 
@@ -148,8 +148,8 @@ export default class Task<+S, +F> {
 
   runAndPrintResult(): void {
     this.run({
-      success(x) { console.log('Success:', x) },
-      failure(x) { console.log('Failure:', x) }
+      success(x) { console.log('Success:', x) }, // eslint-disable-line
+      failure(x) { console.log('Failure:', x) }, // eslint-disable-line
     })
   }
 
@@ -216,10 +216,6 @@ class Rejected<F> extends Task<any, F> {
 }
 
 class Empty<S, F> extends Task<S, F> {
-
-  run(): Cancel {
-    return noop
-  }
 
   run(): Cancel {
     return noop

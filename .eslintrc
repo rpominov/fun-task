@@ -1,7 +1,13 @@
 {
   "parser": "babel-eslint",
   "extends": ["eslint:recommended"],
+  "plugins": [
+    "flowtype"
+  ],
   "rules": {
+    "flowtype/define-flow-type": 1,
+    "flowtype/type-id-match": [1, "^([A-Z][a-z0-9]+)+$"],
+    "flowtype/use-flow-type": 1,
     "comma-dangle": [2, 'always-multiline']
   },
   "env": {

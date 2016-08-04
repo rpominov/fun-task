@@ -36,10 +36,10 @@ test('exception thrown from parent task (with catch cb)', 1, t => {
 
 test('exception thrown from fn (no catch cb)', 1, t => {
   t.throws(() => {
-    Task.of(1).map(x => { throw new Error('err1') }).run({})
+    Task.of(1).map(() => { throw new Error('err1') }).run({})
   }, /err1/)
 })
 
 test('exception thrown from fn (with catch cb)', 1, t => {
-  Task.of(1).map(x => { throw 2 }).run({catch: t.calledWith(2)})
+  Task.of(1).map(() => { throw 2 }).run({catch: t.calledWith(2)})
 })

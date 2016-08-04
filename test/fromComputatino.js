@@ -10,7 +10,7 @@ test('default onFail cb in run works', 1, t => {
 })
 
 test('succ value from computation is passed to run() cb', 1, t => {
-  Task.create((s, f) => s(2)).run(t.calledWith(2))
+  Task.create(s => s(2)).run(t.calledWith(2))
 })
 
 test('cancelation cb returned by computation is called', 1, t => {

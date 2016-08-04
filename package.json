@@ -21,6 +21,7 @@
   "devDependencies": {
     "babel-eslint": "6.1.2",
     "eslint": "2.13.1",
+    "eslint-plugin-flowtype": "2.4.0",
     "lobot": "0.1.17"
   },
   "jsnext:main": "lib-es/index.js",
