@@ -40,6 +40,8 @@ Or, which happens more often, after a refactoring we might for instance change t
 
 Of course bugs not always express themselves in form of exceptions, we can get a `NaN` or just see incorrect data in UI. But for the purpose of this article we focus on bugs that lead to exceptions.
 
+To better understand concept of "expected failures" you may read ["Railway oriented programming"](https://fsharpforfunandprofit.com/posts/recipe-part2/). This article does not touch the bugs vs expected failures subject, but explains very well how expected failures (or just failures) can be handled with a right abstraction.
+
 ## We can't *handle* bugs
 
 When a bug happens the program ends up in an inconsistent state. In other words in a state it should not normally be — in a state that we didn't expect. And all the code that we've written don't expect program to be in such state. From that point we can't make any assuptions about further behavior of the program. We basically have no idea about what is going on (from the point of view of the running program).
