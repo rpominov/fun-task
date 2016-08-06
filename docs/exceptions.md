@@ -185,3 +185,39 @@ So if `catch` callback isn't provided, we can enjoy great debugging expirience i
 The default behaviour is to not catch exceptions. This is what we want in browser, and what also may be a legitimate option for Node.
 
 In Task the `catch` callback is reserved only for bug-exceptions. Expected exception must be wrappend in a `try...catch` block manually (see example with `JSON.parse()` above). All the API and semantics in Task are designed with this assumption in mind.
+
+Exceptions thrown from `success` and `failure` callbacks are never catched, even if `catch` callbacks is provided.
+
+```js
+task.run({
+  success() {
+    // this error won't be catched
+    throw new Error('')
+  },
+  catch(error) {
+    // the error above will not go here
+  }
+})
+```
+
+This is done because otherwise we might end up with half of the code for `success` being executed plus the code for `catch`, which in most cases isn't what we want. For example in a web server case, we could start sending response for `success` case, but then continue by sending the response for `catch`. Instead we should catch manually:
+
+```js
+task.run({
+  success() {
+    try {
+      // ...
+      res.send(/* some part of success response */)
+      // ...
+      // supposedly some code here have thrown
+      // ...
+    } catch (e) {
+      // do something about the exception
+      // but keep in mind that "some part of success response" was already sent
+    }
+  },
+  catch(error) {
+    // handle error thrown from .map(fn) etc.
+  }
+})
+```
