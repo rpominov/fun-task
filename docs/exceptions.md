@@ -72,7 +72,7 @@ This is how a bug can be handled in a program. But more importantly we should _f
 
 ## What is problematic about Promises
 
-**Disclaimer:** It's better to think that Promises simply don't support expected failures and that the failure callback is designed exclusively for uncaught exceptions / bugs. So we should put all expected results (including failures) into success path of Promises. But in this section of the article I try to look at Promises as if they supported expected failures.
+**Disclaimer:** It's better to think that Promises simply don't support expected failures, and that the failure callback is designed exclusively for uncaught exceptions / bugs. So we should put all expected results (including failures) into success path of Promises. But in this section of the article I'll try to look at Promises as if they were designed to support expected failures.
 
 Let's first consider the browser environment. As we concluded earlier, the only thing that we want to do with bugs in a browser, is to report about them to a monitoring system. We don't need Promises for this. I don't know exactly how, but **raven-js** can report about all unhadeled exceptions automatically. I think it replaces `console.error()`  or maybe listents to `error` event on `window`, whatever it does it works well. So in the browser **we at least don't need Promises to catch exceptions** that are bugs. The not-bugs exceptions can be handled manually:
 
