@@ -27,20 +27,28 @@ const strToNumber = (str: string): Task<number, string> => /^\d+$/.test(str)
   ? Task.of(Number(str))
   : Task.rejected('That\'s not a number')
 
-const subProgram: Task<string, void> =
-  write('Give me a number')
-  .chain(read)
-  .chain(strToNumber)
-  .chain(x =>
-    write('Give me another number')
+// This could be in the library
+const retryUntilSuccess = <T>(task: Task<T, mixed>): Task<T, Empty> => {
+  const recur = () => task.orElse(recur)
+  return recur()
+}
+
+// This could be in the library (like all() but not parallel)
+const sequentially = <S1,F1,S2,F2>(task1: Task<S1, F1>, task2: Task<S2, F2>): Task<[S1, S2], F1 | F2> =>
+  task1.chain(x1 => task2.map(x2 => [x1, x2]))
+
+const getNumber = (message: string): Task<number, Empty> =>
+  retryUntilSuccess(
+    write(message)
     .chain(read)
     .chain(strToNumber)
-    .map(y => `${x} * ${y} = ${x * y}`)
+    .orElse(error => write(fixEmpty(error)).chain(Task.rejected))
   )
-  .orElse(error => write(fixEmpty(error)).chain(Task.rejected))
 
-const recur = () => subProgram.orElse(recur)
-const program: Task<void, Empty> = recur().chain(write)
+const program: Task<void, Empty> =
+  sequentially(getNumber('Give me a number'), getNumber('Give me another number'))
+  .map(([x, y]) => `${x} * ${y} = ${x * y}`)
+  .chain(write)
 
 
 // impure
