@@ -96,8 +96,8 @@ export default class Task<+S, +F> {
   }
 
   // Given array of tasks creates a task of array
-  static all<S, F>(tasks: Array<Task<S, F>>): Task<S[], F> {
-    return new All(tasks)
+  static parallel<S, F>(tasks: Array<Task<S, F>>): Task<S[], F> {
+    return new Parallel(tasks)
   }
 
   // Given array of tasks creates a task that completes with the earliest value or error
@@ -127,7 +127,7 @@ export default class Task<+S, +F> {
 
   // Applies the successful value of task `this` to to the successful value of task `otherTask`
   ap<F1>(otherTask: Task<any, F1>): Task<any, F | F1> {
-    return Task.all([(this: Task<any, F>), otherTask]).map(([f, x]) => f(x))
+    return Task.parallel([(this: Task<any, F>), otherTask]).map(([f, x]) => f(x))
   }
 
   // Selects the earlier of the two tasks
@@ -223,7 +223,7 @@ class Empty<S, F> extends Task<S, F> {
 
 }
 
-class All<S, F> extends Task<S[], F> {
+class Parallel<S, F> extends Task<S[], F> {
 
   _tasks: Array<Task<S, F>>;
 

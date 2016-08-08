@@ -80,7 +80,7 @@ TODO
 
 TODO
 
-## `Task.all(tasks)`
+## `Task.parallel(tasks)`
 
 TODO
 

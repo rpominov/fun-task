@@ -12,7 +12,7 @@
 | `task.ap(otherTask)`                     | `Promise.all(promise, otherPromise).then(([fn, x]) => fn(x))`<br/><br/>This method exists mainly for compliance with [Fantasy Land Specification](https://github.com/fantasyland/fantasy-land) |
 | `Task.empty()`                           | `new Promise(() => {})`                  |
 | `task.concat(otherTask)`                 | `Promise.race([promose, otherPromise])`<br/><br/>Aslo mainly for Fantasy Land, makes Task a [Monoid](https://github.com/fantasyland/fantasy-land#monoid) |
-| `Task.all(tasks)`                        | `Promise.all(promises)`                  |
+| `Task.parallel(tasks)`                        | `Promise.all(promises)`                  |
 | `Task.race(tasks)`                       | `Promise.race(promises)`                 |
 | `Task.run({success, failure})`         | `Promise.then(success, failure)`     |
 | `Task.run({success, failure, catch})` | `Promise.then(success, failureAndCatch)`<br/><br/>By default tasks don't catch exceptions thrown from `map`, `chain` etc. But we can choose to catch them by providing `catch` callback. Also notice that exceptions go into their own callback. |

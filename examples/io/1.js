@@ -34,7 +34,7 @@ const retryUntilSuccess = <T>(task: Task<T, mixed>): Task<T, Empty> => {
 }
 
 // This could be in the library (like all() but not parallel)
-const sequentially = <S1,F1,S2,F2>(task1: Task<S1, F1>, task2: Task<S2, F2>): Task<[S1, S2], F1 | F2> =>
+const successively = <S1,F1,S2,F2>(task1: Task<S1, F1>, task2: Task<S2, F2>): Task<[S1, S2], F1 | F2> =>
   task1.chain(x1 => task2.map(x2 => [x1, x2]))
 
 const getNumber = (message: string): Task<number, Empty> =>
@@ -46,7 +46,7 @@ const getNumber = (message: string): Task<number, Empty> =>
   )
 
 const program: Task<void, Empty> =
-  sequentially(getNumber('Give me a number'), getNumber('Give me another number'))
+  successively(getNumber('Give me a number'), getNumber('Give me another number'))
   .map(([x, y]) => `${x} * ${y} = ${x * y}`)
   .chain(write)
 
