@@ -54,52 +54,210 @@ Also if `cancel` called second time or after a completion the cancelation logic 
 
 ## `Task.of(value)`
 
-TODO
+Creates a task that resolves with a given value.
 
-## `Task.rejected(value)`
+```js
+Task.of(2).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
 
-TODO
+// > result: 2
+```
+
+## `Task.rejected(error)`
+
+Creates a task that fails with a given error.
+
+```js
+Task.rejected(2).run({
+  failure(error) {
+    console.log(`error: ${error}`)
+  },
+})
+
+// > error: 2
+```
 
 ## `Task.empty()`
 
-TODO
+Creates a task that never completes.
+
+```js
+Task.empty().run({
+  success(x) {
+    // callback never called
+  },
+  failure(error) {
+    // callback never called
+  },
+})
+```
 
 ## `task.map(fn)`
 
-TODO
+Transforms a task by applying `fn` to the successful value.
+
+```js
+Task.of(2).map(x => x * 3).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: 6
+```
 
 ## `task.mapRejected(fn)`
 
-TODO
+Transforms a task by applying `fn` to the failure value.
+
+```js
+Task.rejected(2).mapRejected(x => x * 3).run({
+  failure(error) {
+    console.log(`error: ${error}`)
+  },
+})
+
+// > error: 6
+```
 
 ## `task.chain(fn)`
 
-TODO
+Transforms a task by applying `fn` to the successful value, where `fn` returns a Task.
+
+```js
+Task.of(2).chain(x => Task.of(x * 3)).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: 6
+```
+
+The function can return a task that fails of course.
+
+```js
+Task.of(2).chain(x => Task.rejected(x * 3)).run({
+  failure(error) {
+    console.log(`error: ${error}`)
+  },
+})
+
+// > error: 6
+```
 
 ## `task.orElse(fn)`
 
-TODO
+Transforms a task by applying `fn` to the failure value, where `fn` returns a Task.
+Similar to `chain` but for failure path.
+
+```js
+Task.rejected(2).orElse(x => Task.of(x * 3)).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: 6
+```
 
 ## `Task.parallel(tasks)`
 
-TODO
+Given array of tasks creates a task of array. When result task executed given tasks will be executed in parallel.
 
-## `task.ap(otherTask)`
+```js
+Task.parallel([Task.of(2), Task.of(3)]).run(
+  success(xs) {
+    console.log(`result: ${xs.join(', ')}`)
+  },
+)
 
-TODO
+// > result: 2, 3
+```
+
+If any of given tasks fail, the result taks will also fail with the same error.
+
+```js
+Task.parallel([Task.of(2), Task.rejected(3)]).run(
+  failure(error) {
+    console.log(`error: ${error}`)
+  },
+)
+
+// > error: 3
+```
 
 ## `Task.race(tasks)`
 
-TODO
+Given array of tasks creates a task that completes with the earliest value or error.
+After the fastest task completes other tasks are canceled.
 
-## `task.concat(otherTask)`
+```js
+const task1 = Task.create(suc => {
+  const id = setTimeout(() => suc(1), 1000)
+  return () => {
+    console.log('canceled: 1')
+    clearTimeout(id)
+  }
+})
 
-TODO
+const task2 = Task.create(suc => {
+  const id = setTimeout(() => suc(2), 2000)
+  return () => {
+    console.log('canceled: 2')
+    clearTimeout(id)
+  }
+})
+
+Task.race([task1, task2]).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > canceled: 2
+// > result: 1
+```
+
 
 ## `task.run(handlers)`
 
-TODO
+Runs the task. The `handlers` argument can contain 3 kinds of handlers `success`, `failure`, and `catch`.
+All handlers are optional, if you want to run task without handlers do it like this `task.run({})`.
+If a function passed as `handlers` it's automatically transformend to `{success: fn}`,
+so if you need only success handler you can do `task.run(x => ...)`.
+
+If `failure` handler isn't provided but task fails, an exception will be thrown.
+You should always provided `failure` handlers for task that may fail.
+
+The `catch` handler is for errors thrown from functions passed to `map`, `chain` etc.
+[More on how it works](./exceptions.md).
+
+```js
+Task.of(2).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+  failure(error) {
+    // handle failure ...
+  },
+  catch(error) {
+    // handle error thrown from `map(fn)` etc ...
+  },
+})
+
+// > result: 2
+```
 
 ## `task.runAndLog()`
 
-TODO
+Runs the task and prints results using `console.log()`. Mainly for testing / debugging etc.
+
+```js
+Task.of(2).runAndLog()
+
+// > Success: 2
+```
