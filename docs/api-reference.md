@@ -230,11 +230,11 @@ All handlers are optional, if you want to run task without handlers do it like t
 If a function passed as `handlers` it's automatically transformend to `{success: fn}`,
 so if you need only success handler you can do `task.run(x => ...)`.
 
-If `failure` handler isn't provided but task fails, an exception will be thrown.
-You should always provided `failure` handlers for task that may fail.
+If `failure` handler isn't provided but task fails, an exception is thrown.
+You should always provided `failure` handlers for tasks that may fail.
 
 The `catch` handler is for errors thrown from functions passed to `map`, `chain` etc.
-[More on how it works](./exceptions.md).
+[More on how it works](./exceptions.md#how-exceptions-work-in-task).
 
 ```js
 Task.of(2).run({
