@@ -20,6 +20,22 @@ test('cancelation works', 2, t => {
   ]).run({})()
 })
 
+test('cancelation works (after completion)', 1, t => {
+  Task.race([
+    Task.of(1),
+    Task.create(() => t.calledOnce()),
+  ]).run({})
+})
+
+test('cancelation works (after completion, async)', 1, t => {
+  let s: any = null
+  Task.race([
+    Task.create((_s) => {s = _s; return t.fail}),
+    Task.create(() => t.calledOnce()),
+  ]).run({})
+  s()
+})
+
 test('after one task comletes others a canceled (sync complete)', 1, t => {
   Task.race([
     Task.of(2),

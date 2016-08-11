@@ -19,8 +19,25 @@ test('cancelation cb returned by computation is called only once', 1, t => {
   cancel()
 })
 
-test('after a cuss, cancelation cb returned by computation isn\'t called ', 0, t => {
+test('after a cuss, cancelation cb returned by computation isn\'t called', 0, t => {
   Task.create((s) => { s(1); return t.fail }).run({})()
+})
+
+test('after a cuss, cancelation cb returned by computation isn\'t called (async)', 0, t => {
+  let s: any = null
+  const cancel = Task.create((_s) => { s = _s; return t.fail }).run({})
+  s()
+  cancel()
+})
+
+test('after a cuss, cancelation cb returned by computation isn\'t called (cancelation in success cb)', 0, t => {
+  let s: any = null
+  const cancel = Task.create((_s) => { s = _s; return t.fail }).run({
+    success() {
+      cancel()
+    },
+  })
+  s()
 })
 
 test('after a cuss, all calls of computation cbs are ignored', 1, t => {

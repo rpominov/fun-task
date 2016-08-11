@@ -44,9 +44,21 @@ const runHelper = <S, F>(body: RunHelperBody<S, F>, handlers: Handlers<S, F>): C
     close = noop
   }
   const bodyReturn = body(
-    x => { success(x); close() },
-    x => { failure(x); close() },
-    catch_ && (x => { (catch_: any)(x); close() })
+    x => {
+      let s = success
+      close()
+      s(x)
+    },
+    x => {
+      let f = failure
+      close()
+      f(x)
+    },
+    catch_ && (x => {
+      let c = (catch_: any)
+      close()
+      c(x)
+    })
   )
   onCancel = bodyReturn.onCancel || noop
   onClose = bodyReturn.onClose || noop
@@ -81,7 +93,7 @@ export default class Task<+S, +F> {
     return Task.of(value)
   }
 
-  // Creates a task that rejects with a given error
+  // Creates a task that fails with a given error
   static rejected<S, F>(error: F): Task<S, F> {
     return new Rejected(error)
   }
@@ -115,12 +127,12 @@ export default class Task<+S, +F> {
     return new MapRejected(this, fn)
   }
 
-  // Transforms a task by applying `fn` to the successful value (where `fn` returns a Task)
+  // Transforms a task by applying `fn` to the successful value, where `fn` returns a Task
   chain<S1, F1>(fn: (x: S) => Task<S1, F1>): Task<S1, F | F1> {
     return new Chain(this, fn)
   }
 
-  // Transforms a task by applying `fn` to the failure value (where `fn` returns a Task)
+  // Transforms a task by applying `fn` to the failure value, where `fn` returns a Task
   orElse<S1, F1>(fn: (x: F) => Task<S1, F1>): Task<S | S1, F1> {
     return new OrElse(this, fn)
   }
