@@ -45,17 +45,17 @@ const runHelper = <S, F>(body: RunHelperBody<S, F>, handlers: Handlers<S, F>): C
   }
   const bodyReturn = body(
     x => {
-      let s = success
+      const s = success
       close()
       s(x)
     },
     x => {
-      let f = failure
+      const f = failure
       close()
       f(x)
     },
     catch_ && (x => {
-      let c = (catch_: any)
+      const c = (catch_: any)
       close()
       c(x)
     })
@@ -125,6 +125,11 @@ export default class Task<+S, +F> {
   // Transforms a task by applying `fn` to the failure value
   mapRejected<F1>(fn: (x: F) => F1): Task<S, F1> {
     return new MapRejected(this, fn)
+  }
+
+  // Transforms a task by applying `sf` to the successful value or `ff` to the failure value
+  bimap<S1,F1>(sf: (x: S) => S1, ff: (x: F) => F1): Task<S1, F1> {
+    return this.map(sf).mapRejected(ff)
   }
 
   // Transforms a task by applying `fn` to the successful value, where `fn` returns a Task

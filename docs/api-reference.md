@@ -123,6 +123,30 @@ Task.rejected(2).mapRejected(x => x * 3).run({
 // > error: 6
 ```
 
+## `task.bimap(sFn, fFn)`
+
+Transforms a task by applying `sFn` to the successful value or `fFn` to the failure value.
+
+```js
+Task.of(2).bimap(x => x * 3, x => x).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: 6
+```
+
+```js
+Task.rejected(2).bimap(x => x, x => x * 3).run({
+  failure(error) {
+    console.log(`error: ${error}`)
+  },
+})
+
+// > error: 6
+```
+
 ## `task.chain(fn)`
 
 Transforms a task by applying `fn` to the successful value, where `fn` returns a Task.
