@@ -144,7 +144,7 @@ export default class Task<+S, +F> {
 
   // Applies the successful value of task `this` to to the successful value of task `otherTask`
   ap<F1>(otherTask: Task<any, F1>): Task<any, F | F1> {
-    return Task.parallel([(this: Task<any, F>), otherTask]).map(([f, x]) => f(x))
+    return this.chain(f => otherTask.map(x => (f: any)(x)))
   }
 
   // Selects the earlier of the two tasks
