@@ -128,7 +128,7 @@ export default class Task<+S, +F> {
   }
 
   // Transforms a task by applying `sf` to the successful value or `ff` to the failure value
-  bimap<S1,F1>(sf: (x: S) => S1, ff: (x: F) => F1): Task<S1, F1> {
+  bimap<S1,F1>(ff: (x: F) => F1, sf: (x: S) => S1): Task<S1, F1> {
     return this.map(sf).mapRejected(ff)
   }
 
