@@ -1,5 +1,7 @@
 // @flow
 
+import {runGenerator} from 'static-land'
+
 type Cancel = () => void
 type Handler<-T> = (x: T) => void
 type Handlers<-S, -F> = {
@@ -161,7 +163,7 @@ export default class Task<+S, +F> {
   static ap<A, B, F1, F2>(tf: Task<(x: A) => B, F1>, tx: Task<A, F2>): Task<B, F1 | F2> {
     return tf.chain(f => tx.map(x => f(x)))
   }
-  ap<F1>(otherTask: Task<any, F1>): Task<any, F | F1> {
+  ap<F1>(otherTask: Task<mixed, F1>): Task<mixed, F | F1> {
     return this.chain(f => otherTask.map(x => (f: any)(x)))
   }
 
@@ -171,6 +173,10 @@ export default class Task<+S, +F> {
   }
   concat<S1, F1>(otherTask: Task<S1, F1>): Task<S | S1, F | F1> {
     return Task.race([this, otherTask])
+  }
+
+  static do(generator: () => Generator<Task<any, any>, Task<any, any>, mixed>): Task<mixed, mixed> {
+    return runGenerator(Task, generator)
   }
 
   _run(handlers: Handlers<S, F>): Cancel { // eslint-disable-line

@@ -20,6 +20,7 @@
   "homepage": "https://github.com/rpominov/fun-task#readme",
   "devDependencies": {
     "babel-eslint": "6.1.2",
+    "babel-polyfill": "6.13.0",
     "eslint": "2.13.1",
     "eslint-plugin-flowtype": "2.4.0",
     "lobot": "0.1.18"
@@ -29,5 +30,8 @@
     "lib",
     "lib-es",
     "umd"
-  ]
+  ],
+  "dependencies": {
+    "static-land": "0.1.7"
+  }
 }

@@ -302,6 +302,65 @@ Task.race([task1, task2]).run({
 // > result: 1
 ```
 
+## `Task.do(generator)`
+
+This is something like [Haskell's do notation](https://en.wikibooks.org/wiki/Haskell/do_notation)
+or JavaScritp's async/await based on [generators](https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Iterators_and_Generators).
+
+You pass a generator that `yiels` and `returns` tasks and get a task in return.
+The whole proccess is pure, tasks are not being ran until the result task is ran.
+
+Here is a not runnable but somewhat real-world example:
+
+```js
+// gets user from our API, returns a Task
+const getUserFromAPI = ...
+
+// gets zip code for given address using 3rd party API, returns a Task
+const getZipCode = ...
+
+function getUsersZip(userId) {
+  return Task.do(function* () {
+
+    const user = yield getUserFromAPI(userId)
+
+    if (!user.address) {
+      return Task.rejected({type: 'user_dont_have_address'})
+    }
+
+    return getZipCode(user.address)
+
+  })
+}
+
+getUsersZip(42).run({
+  success(zip) {
+    // ...
+  },
+  failure(error) {
+    // The error here is either {type: 'user_dont_have_address'}
+    // or some of errors that getUserFromAPI or getZipCode can produce
+    // ...
+  },
+})
+```
+
+And here's some runnable example:
+
+```js
+Task.do(function* () {
+  const a = yield Task.of(2)
+  const b = yield Task.of(3)
+  return Task.of(a * b)
+}).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: 6
+```
+
 
 ## `task.run(handlers)`
 

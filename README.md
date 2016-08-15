@@ -92,7 +92,7 @@ immediately, the computation starts only when `task.run()` is called
 
 ## Specifications compatibility
 
-Task is compatible with [Fantasy Land](https://github.com/fantasyland/fantasy-land) and [Static Land](https://github.com/rpominov/static-land/blob/master/docs/spec.md) implementing:
+Task is compatible with [Fantasy Land](https://github.com/fantasyland/fantasy-land) and [Static Land](https://github.com/rpominov/static-land) implementing:
 
 - [Semigroup](https://github.com/fantasyland/fantasy-land#semigroup)
 - [Monoid](https://github.com/fantasyland/fantasy-land#monoid)
