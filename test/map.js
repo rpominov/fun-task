@@ -9,6 +9,10 @@ test('works with of', 1, t => {
   Task.of(2).map(x => x + 10).run(t.calledWith(12))
 })
 
+test('static alias works', 1, t => {
+  Task.map(x => x + 10, Task.of(2)).run(t.calledWith(12))
+})
+
 test('this==undefined in success cd', 1, t => {
   Task.of(2).map(x => x).run({success() { t.equal(this, undefined) }})
 })

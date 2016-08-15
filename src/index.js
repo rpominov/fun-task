@@ -118,36 +118,57 @@ export default class Task<+S, +F> {
   }
 
   // Transforms a task by applying `fn` to the successful value
+  static map<S1>(fn: (x: S) => S1, task: Task<S, F>): Task<S1, F> {
+    return new Map(task, fn)
+  }
   map<S1>(fn: (x: S) => S1): Task<S1, F> {
     return new Map(this, fn)
   }
 
   // Transforms a task by applying `fn` to the failure value
+  static mapRejected<F1>(fn: (x: F) => F1, task: Task<S, F>): Task<S, F1> {
+    return new MapRejected(task, fn)
+  }
   mapRejected<F1>(fn: (x: F) => F1): Task<S, F1> {
     return new MapRejected(this, fn)
   }
 
   // Transforms a task by applying `sf` to the successful value or `ff` to the failure value
-  bimap<S1,F1>(ff: (x: F) => F1, sf: (x: S) => S1): Task<S1, F1> {
-    return this.map(sf).mapRejected(ff)
+  static bimap<S1, F1>(ff: (x: F) => F1, fs: (x: S) => S1, task: Task<S, F>): Task<S1, F1> {
+    return task.map(fs).mapRejected(ff)
+  }
+  bimap<S1, F1>(ff: (x: F) => F1, fs: (x: S) => S1): Task<S1, F1> {
+    return this.map(fs).mapRejected(ff)
   }
 
   // Transforms a task by applying `fn` to the successful value, where `fn` returns a Task
+  static chain<S1, F1>(fn: (x: S) => Task<S1, F1>, task: Task<S, F>): Task<S1, F | F1> {
+    return new Chain(task, fn)
+  }
   chain<S1, F1>(fn: (x: S) => Task<S1, F1>): Task<S1, F | F1> {
     return new Chain(this, fn)
   }
 
   // Transforms a task by applying `fn` to the failure value, where `fn` returns a Task
+  static orElse<S1, F1>(fn: (x: F) => Task<S1, F1>, task: Task<S, F>): Task<S | S1, F1> {
+    return new OrElse(task, fn)
+  }
   orElse<S1, F1>(fn: (x: F) => Task<S1, F1>): Task<S | S1, F1> {
     return new OrElse(this, fn)
   }
 
   // Applies the successful value of task `this` to to the successful value of task `otherTask`
+  static ap<A, B, F1, F2>(tf: Task<(x: A) => B, F1>, tx: Task<A, F2>): Task<B, F1 | F2> {
+    return tf.chain(f => tx.map(x => f(x)))
+  }
   ap<F1>(otherTask: Task<any, F1>): Task<any, F | F1> {
     return this.chain(f => otherTask.map(x => (f: any)(x)))
   }
 
   // Selects the earlier of the two tasks
+  static concat<S1, F1, S2, F2>(a: Task<S1, F1>, b: Task<S2, F2>): Task<S1 | S2, F1 | F2> {
+    return Task.race([a, b])
+  }
   concat<S1, F1>(otherTask: Task<S1, F1>): Task<S | S1, F | F1> {
     return Task.race([this, otherTask])
   }

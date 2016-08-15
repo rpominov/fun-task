@@ -92,19 +92,16 @@ immediately, the computation starts only when `task.run()` is called
 
 ## Specifications compatibility
 
-Task is compatible with [Fantasy Land Specification](https://github.com/fantasyland/fantasy-land)
-and implements:
-[Semigroup](https://github.com/fantasyland/fantasy-land#semigroup),
-[Monoid](https://github.com/fantasyland/fantasy-land#monoid),
-[Functor](https://github.com/fantasyland/fantasy-land#functor),
-[Bifunctor](https://github.com/fantasyland/fantasy-land#bifunctor),
-[Apply](https://github.com/fantasyland/fantasy-land#apply),
-[Applicative](https://github.com/fantasyland/fantasy-land#applicative),
-[Chain](https://github.com/fantasyland/fantasy-land#chain), and
-[Monad](https://github.com/fantasyland/fantasy-land#monad).
+Task is compatible with [Fantasy Land](https://github.com/fantasyland/fantasy-land) and [Static Land](https://github.com/rpominov/static-land/blob/master/docs/spec.md) implementing:
 
-TODO: compatibility with [Static Land](https://github.com/rpominov/static-land/blob/master/docs/spec.md)
-
+- [Semigroup](https://github.com/fantasyland/fantasy-land#semigroup)
+- [Monoid](https://github.com/fantasyland/fantasy-land#monoid)
+- [Functor](https://github.com/fantasyland/fantasy-land#functor)
+- [Bifunctor](https://github.com/fantasyland/fantasy-land#bifunctor)
+- [Apply](https://github.com/fantasyland/fantasy-land#apply)
+- [Applicative](https://github.com/fantasyland/fantasy-land#applicative)
+- [Chain](https://github.com/fantasyland/fantasy-land#chain)
+- [Monad](https://github.com/fantasyland/fantasy-land#monad)
 
 ## Development
 

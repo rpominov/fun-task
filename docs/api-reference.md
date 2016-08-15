@@ -97,6 +97,8 @@ Task.empty().run({
 
 ## `task.map(fn)`
 
+> Static alias: `Task.map(fn, task)`
+
 Transforms a task by applying `fn` to the successful value.
 
 ```js
@@ -111,6 +113,8 @@ Task.of(2).map(x => x * 3).run({
 
 ## `task.mapRejected(fn)`
 
+> Static alias: `Task.mapRejected(fn, task)`
+
 Transforms a task by applying `fn` to the failure value.
 
 ```js
@@ -124,6 +128,8 @@ Task.rejected(2).mapRejected(x => x * 3).run({
 ```
 
 ## `task.bimap(fFn, sFn)`
+
+> Static alias: `Task.bimap(fFn, sFn, task)`
 
 Transforms a task by applying `fFn` to the failure value or `sFn` to the successful value.
 
@@ -148,6 +154,8 @@ Task.rejected(2).bimap(x => x * 3, x => x).run({
 ```
 
 ## `task.chain(fn)`
+
+> Static alias: `Task.chain(fn, task)`
 
 Transforms a task by applying `fn` to the successful value, where `fn` returns a Task.
 
@@ -175,6 +183,8 @@ Task.of(2).chain(x => Task.rejected(x * 3)).run({
 
 ## `task.orElse(fn)`
 
+> Static alias: `Task.orElse(fn, task)`
+
 Transforms a task by applying `fn` to the failure value, where `fn` returns a Task.
 Similar to `chain` but for failure path.
 
@@ -187,6 +197,52 @@ Task.rejected(2).orElse(x => Task.of(x * 3)).run({
 
 // > result: 6
 ```
+
+## `tFn.ap(tX)`
+
+> Static alias: `Task.ap(tFn, tX)`
+
+Applies the successful value of task `tFn` to to the successful value of task `tX`.
+Uses `chain` under the hood, if you need parallel execution use `parallel`.
+
+```js
+Task.of(x => x * 3).ap(Task.of(2)).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: 6
+```
+
+
+## `task.concat(otherTask)`
+
+> Static alias: `Task.concat(task, otherTask)`
+
+Selects the earlier of the two tasks. Uses `race` under the hood.
+
+```js
+const task1 = Task.create(suc => {
+  const id = setTimeout(() => suc(1), 1000)
+  return () => { clearTimeout(id) }
+})
+
+const task2 = Task.create(suc => {
+  const id = setTimeout(() => suc(2), 2000)
+  return () => { clearTimeout(id) }
+})
+
+task1.concat(task2).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: 1
+```
+
+
 
 ## `Task.parallel(tasks)`
 

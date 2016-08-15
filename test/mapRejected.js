@@ -9,6 +9,10 @@ test('works with .rejected', 1, t => {
   Task.rejected(2).mapRejected(x => x + 10).run({failure: t.calledWith(12)})
 })
 
+test('static alias works', 1, t => {
+  Task.mapRejected(x => x + 10, Task.rejected(2)).run({failure: t.calledWith(12)})
+})
+
 test('this==undefined in success cd', 1, t => {
   Task.of(2).mapRejected(x => x).run({success() { t.equal(this, undefined) }})
 })

@@ -9,6 +9,10 @@ test('works with of + of', 1, t => {
   Task.of(2).chain(x => Task.of(x + 10)).run(t.calledWith(12))
 })
 
+test('static alias works', 1, t => {
+  Task.chain(x => Task.of(x + 10), Task.of(2)).run(t.calledWith(12))
+})
+
 test('works with of + rejected', 1, t => {
   Task.of(2).chain(x => Task.rejected(x + 10)).run({failure: t.calledWith(12)})
 })
