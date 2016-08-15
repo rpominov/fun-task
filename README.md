@@ -92,10 +92,11 @@ immediately, the computation starts only when `task.run()` is called
 
 ## Specifications compatibility
 
+<a href="https://github.com/fantasyland/fantasy-land">
+  <img width="50" height="50" src="https://raw.githubusercontent.com/fantasyland/fantasy-land/master/logo.png" />
+</a>
 <a href="https://github.com/rpominov/static-land">
   <img width="80" height="50" src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" />
-</a> <a href="https://github.com/fantasyland/fantasy-land">
-  <img width="50" height="50" src="https://raw.githubusercontent.com/fantasyland/fantasy-land/master/logo.png" />
 </a>
 
 Task is compatible with [Fantasy Land](https://github.com/fantasyland/fantasy-land) and [Static Land](https://github.com/rpominov/static-land) implementing:
