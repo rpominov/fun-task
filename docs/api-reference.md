@@ -321,15 +321,21 @@ const getZipCode = ...
 
 function getUsersZip(userId) {
   return Task.do(function* () {
-
     const user = yield getUserFromAPI(userId)
-
     if (!user.address) {
       return Task.rejected({type: 'user_dont_have_address'})
     }
-
     return getZipCode(user.address)
+  })
+}
 
+// Same function re-written using chain instead of do
+function getUsersZip(userId) {
+  return getUserFromAPI(userId).chain(user => {
+    if (!user.address) {
+      return Task.rejected({type: 'user_dont_have_address'})
+    }
+    return getZipCode(user.address)
   })
 }
 
