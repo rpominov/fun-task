@@ -6,7 +6,7 @@
   "scripts": {
     "lobot": "lobot",
     "lint": "eslint .",
-    "test": "eslint . && lobot test"
+    "test": "eslint . && flow check && lobot test"
   },
   "repository": {
     "type": "git",
@@ -22,8 +22,9 @@
     "babel-eslint": "6.1.2",
     "babel-polyfill": "6.13.0",
     "eslint": "2.13.1",
-    "eslint-plugin-flowtype": "2.4.0",
-    "lobot": "0.1.18"
+    "eslint-plugin-flowtype": "2.7.0",
+    "flow-bin": "0.30.0",
+    "lobot": "0.1.19"
   },
   "jsnext:main": "lib-es/index.js",
   "files": [
