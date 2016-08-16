@@ -6,7 +6,8 @@
   "scripts": {
     "lobot": "lobot",
     "lint": "eslint .",
-    "test": "eslint . && flow check && lobot test"
+    "test": "eslint . && flow check && lobot test",
+    "preversion": "cp src/index.js lib/index.flow.js",
   },
   "repository": {
     "type": "git",
