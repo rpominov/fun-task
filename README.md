@@ -90,6 +90,20 @@ immediately, the computation starts only when `task.run()` is called
 - [How exceptions catching work in Task](docs/exceptions.md#how-exceptions-work-in-task)
 - [API comparison with Promises](docs/promise-vs-task-api.md)
 
+## [Flow](https://flowtype.org/)
+
+The NPM package ships with Flow definitions. So you can do something like this if you use Flow:
+
+```js
+// @flow
+
+import Task from 'fun-task'
+
+function incrementTask<F>(task: Task<number, F>): Task<number, F> {
+  return task.map(x => x + 1)
+}
+```
+
 ## Specifications compatibility
 
 <a href="https://github.com/fantasyland/fantasy-land">
