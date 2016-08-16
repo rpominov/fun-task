@@ -7,7 +7,7 @@
     "lobot": "lobot",
     "lint": "eslint .",
     "test": "eslint . && flow check && lobot test",
-    "preversion": "cp src/index.js lib/index.flow.js",
+    "preversion": "cp src/index.js lib/index.flow.js"
   },
   "repository": {
     "type": "git",
