@@ -34,5 +34,19 @@
   ],
   "dependencies": {
     "static-land": "0.1.7"
-  }
+  },
+  "keywords": [
+    "task",
+    "future",
+    "promise",
+    "monad",
+    "applicative",
+    "functor",
+    "fantasy-land",
+    "static-land",
+    "fantasy land",
+    "static land",
+    "fp",
+    "functional"
+  ]
 }
