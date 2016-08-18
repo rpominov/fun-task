@@ -183,6 +183,14 @@ export default class Task<+S, +F> {
     throw new Error('Method run() is not implemented in basic Task class.')
   }
 
+  _toString(): string {
+    return '<abstract>'
+  }
+
+  toString() {
+    return `Task.${this._toString()}`
+  }
+
   run(h: LooseHandlers<S, F>): Cancel {
     const handlers = typeof h === 'function'
       ? {success: h, failure: defaultFailureHandler}
@@ -223,6 +231,10 @@ class FromComputation<S, F> extends Task<S, F> {
     }, handlers)
   }
 
+  _toString() {
+    return 'create(..)'
+  }
+
 }
 
 class Of<S> extends Task<S, any> {
@@ -238,6 +250,10 @@ class Of<S> extends Task<S, any> {
     const {success} = handlers
     success(this._value)
     return noop
+  }
+
+  _toString() {
+    return `of(${String(this._value)})`
   }
 
 }
@@ -257,12 +273,20 @@ class Rejected<F> extends Task<any, F> {
     return noop
   }
 
+  _toString() {
+    return `rejected(${String(this._error)})`
+  }
+
 }
 
 class Empty<S, F> extends Task<S, F> {
 
   run(): Cancel {
     return noop
+  }
+
+  _toString() {
+    return `empty()`
   }
 
 }
@@ -297,6 +321,10 @@ class Parallel<S, F> extends Task<S[], F> {
     }, handlers)
   }
 
+  _toString() {
+    return `parallel([${this._tasks.map(x => x._toString()).join(', ')}])`
+  }
+
 }
 
 class Race<S, F> extends Task<S, F> {
@@ -314,6 +342,10 @@ class Race<S, F> extends Task<S, F> {
       const cancels = this._tasks.map(task => task.run(handlers))
       return {onClose() { cancels.forEach(cancel => cancel()) }}
     }, handlers)
+  }
+
+  _toString() {
+    return `race([${this._tasks.map(x => x._toString()).join(', ')}])`
   }
 
 }
@@ -351,6 +383,10 @@ class Map<SIn, SOut, F> extends Task<SOut, F> {
       catch: catch_,
     })
   }
+
+  _toString() {
+    return `${this._task._toString()}.map(..)`
+  }
 }
 
 class MapRejected<S, FIn, FOut> extends Task<S, FOut> {
@@ -385,6 +421,10 @@ class MapRejected<S, FIn, FOut> extends Task<S, FOut> {
       },
       catch: catch_,
     })
+  }
+
+  _toString() {
+    return `${this._task._toString()}.mapRejected(..)`
   }
 }
 
@@ -423,6 +463,10 @@ class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
       return {onCancel() { cancel1(); cancel2() }}
     }, handlers)
   }
+
+  _toString() {
+    return `${this._task._toString()}.chain(..)`
+  }
 }
 
 class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
@@ -460,5 +504,9 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
       return {onCancel() { cancel1(); cancel2() }}
     }, handlers)
 
+  }
+
+  _toString() {
+    return `${this._task._toString()}.orElse(..)`
   }
 }
