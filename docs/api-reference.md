@@ -272,7 +272,7 @@ Task.parallel([Task.of(2), Task.rejected(3)]).run(
 
 ## `Task.race(tasks)`
 
-Given array of tasks creates a task that completes with the earliest value or error.
+Given array of tasks creates a task that completes with the earliest successful or failure value.
 After the fastest task completes other tasks are canceled.
 
 ```js
