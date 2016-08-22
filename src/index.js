@@ -337,8 +337,8 @@ class Race<S, F> extends Task<S, F> {
   }
 
   _run(handlers: Handlers<S, F>): Cancel {
-    return runHelper((success, failure) => {
-      const handlers = {success, failure}
+    return runHelper((success, failure, _catch) => {
+      const handlers = {success, failure, catch: _catch}
       const cancels = this._tasks.map(task => task.run(handlers))
       return {onClose() { cancels.forEach(cancel => cancel()) }}
     }, handlers)

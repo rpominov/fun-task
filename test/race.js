@@ -20,14 +20,14 @@ test('cancelation works', 2, t => {
   ]).run({})()
 })
 
-test('cancelation works (after completion)', 1, t => {
+test('after one task comletes others a canceled', 1, t => {
   Task.race([
-    Task.of(1),
+    Task.of(2),
     Task.create(() => t.calledOnce()),
   ]).run({})
 })
 
-test('cancelation works (after completion, async)', 1, t => {
+test('after one task comletes others a canceled (async)', 1, t => {
   let s: any = null
   Task.race([
     Task.create((_s) => {s = _s; return t.fail}),
@@ -36,20 +36,18 @@ test('cancelation works (after completion, async)', 1, t => {
   s()
 })
 
-test('after one task comletes others a canceled (sync complete)', 1, t => {
-  Task.race([
-    Task.of(2),
-    Task.create(() => t.calledOnce()),
-  ]).run({})
+const of1 = Task.of(1)
+const thrower1 = Task.create(() => { throw new Error('err1') })
+const thrower2 = Task.create(() => { throw 2 })
+
+test('exception thrown in a child task (no catch cb)', 1, t => {
+  t.throws(() => {
+    Task.race([thrower1, of1]).run({})
+  }, /err1/)
 })
 
-test('after one task comletes others a canceled (async complete)', 1, t => {
-  let s = (null: any)
-  Task.race([
-    Task.create(_s => { s = _s }),
-    Task.create(() => t.calledOnce()),
-  ]).run({})
-  s()
+test('exception thrown in a child task (with catch cb)', 1, t => {
+  Task.race([thrower2, of1]).run({catch: t.calledWith(2), success: t.fail})
 })
 
 test('this==undefined in success cd', 1, t => {
