@@ -15,7 +15,7 @@ npm install fun-task
 ```
 
 ```js
-// modern JavaScritp
+// modern JavaScript
 import Task from 'fun-task'
 
 // classic JavaScript
