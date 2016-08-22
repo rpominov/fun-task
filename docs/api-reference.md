@@ -259,6 +259,7 @@ Task.parallel([Task.of(2), Task.of(3)]).run(
 ```
 
 If any of given tasks fail, the result taks will also fail with the same error.
+In this case tasks that are still running are canceled.
 
 ```js
 Task.parallel([Task.of(2), Task.rejected(3)]).run(
@@ -377,6 +378,7 @@ so if you need only success handler you can do `task.run(x => ...)`.
 
 If `failure` handler isn't provided but task fails, an exception is thrown.
 You should always provided `failure` handlers for tasks that may fail.
+If you want to ignore failure pass a `noop` failure handler explicitly.
 
 The `catch` handler is for errors thrown from functions passed to `map`, `chain` etc.
 [More on how it works](./exceptions.md#how-exceptions-work-in-task).
