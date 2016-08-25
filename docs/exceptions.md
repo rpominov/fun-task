@@ -31,11 +31,11 @@ if (x <= 0) {
 
 Here are two expected paths of this program:
 
-<img src="./assets/exceptions/flow3.png" height="110" width="460" />
+<img src="./assets/exceptions/flow3.png" height="147" width="480" />
 
 And here is an unexpected path:
 
-<img src="./assets/exceptions/flow4.png" height="42" width="460" />
+<img src="./assets/exceptions/flow4.png" height="56" width="480" />
 
 We as programmers don't expect this to ever happen with this program.
 But if, for example, we change first condition and forget to change second one program may
@@ -82,7 +82,7 @@ main(inputFromStdin)
 
 In this example execution flow of the program looks like this:
 
-<img src="./assets/exceptions/flow1.png" height="45" width="345" />
+<img src="./assets/exceptions/flow1.png" height="60" width="459" />
 
 As you can see program splits in two places. This is happen very often in programs.
 In some cases all branches look neutral, in other cases (like this) we can consider one path as
@@ -126,7 +126,7 @@ function main(userInput) {
 In this version flow looks more like the folowing. It looks simpler.
 It looks like we simply write code that cannot fail and Either takes care of managing failure branch.
 
-<img src="./assets/exceptions/flow2.png" height="45" width="173" />
+<img src="./assets/exceptions/flow2.png" height="60" width="230" />
 
 Maybe this doesn't make much sense to you now (if you're not familiar with Either).
 And this is by no means a complete explanation of Either pattern (check out resources
