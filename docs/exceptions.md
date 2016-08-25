@@ -1,66 +1,209 @@
-# Exceptions catching in async abstractions like Promise or Task
+# Try..catch in JavaScript async abstractions like Promise or Task
 
-This article explains the reasoning behind how exception catching works in Task.
+This article explains the reasoning behind how errors catching works in Task.
+It starts from very fundamental concepts, but it's necessary to avoid misunderstanding
+later in the article when some terms from earlier parts are used.
+The closer to the end the more practical matters are discussed.
 
-## Two kinds of failures
+## Expected and unexpected code paths
 
-When we talk about an abstraction that has some notions of failures (e.g. we have a `success` and `failure` callbacks somewhere), first thing we should do is to distinguish two kinds of failures: bugs and expected failures.
-
-Expected failures are outcomes of some operations that we know may happen, and that we can't prevent. For example suppose we have a string that contains a JSON provided by a user, and we want to parse it.
-
-```js
-const object = JSON.parse(str)
-```
-
-We know that this operation may throw an exception in case if user provided an incorrect JSON. And we must handle this:
+In any program (especially in JavaScript) there always expected and unexpected code paths.
+When a program goes by an unexpected path we call it "bug". And when it goes only by expected paths
+is just normal execution of the program. Consider this example:
 
 ```js
-try {
-  const object = JSON.parse(str)
-} catch (error) {
-  // handle incorrect JSON...
+let x = Math.random() - 0.5
+let y
+let z
+
+if (x > 0) {
+  y = 10
+} else {
+  z = 10
+}
+
+if (x <= 0) {
+  alert(z + 5)
+} else {
+  alert(y + 5)
 }
 ```
 
-Bugs on the other hand are a programmer's mistakes. For example we have a function like this:
+Here are two expected paths of this program:
+
+<img src="./assets/exceptions/flow3.png" height="110" width="460" />
+
+And here is an unexpected path:
+
+<img src="./assets/exceptions/flow4.png" height="42" width="460" />
+
+We as programmers don't expect this to ever happen with this program.
+But if, for example, we change first condition and forget to change second one program may
+run through the unexpected path. Than would be a bug.
+
+
+## Railway oriented programming / split expected path in two
+
+Also we can introduce some abstractions and semantics that would split **expected path** into
+**expected success** and **expected failure**. If you understand `Either` type you know what I'm talking about.
+This is fairly common pattern in FP world, I'll try to explain it briefly, but here are some good
+articles that do a much better job:
+
+- ["Railway oriented programming"](https://fsharpforfunandprofit.com/posts/recipe-part2/)
+- ["A Monad in Practicality: First-Class Failures"](http://robotlolita.me/2013/12/08/a-monad-in-practicality-first-class-failures.html)
+- ["Practical Intro to Monads in JavaScript: Either"](https://tech.evojam.com/2016/03/21/practical-intro-to-monads-in-javascript-either/)
+
+Say we build a simple CLI program that takes a number `n` from user and prints `1/n`.
 
 ```js
-function getAuthorAge(post) {
-  return post.author.age
+function print(str) {
+  console.log(str)
+}
+
+function main(userInput) {
+  const number = parseInt(userInput, 10)
+
+  if (Number.isNaN(number)) {
+    print(`Not a number: ${userInput}`)
+  } else {
+    if (number === 0) {
+      print(`Cannot divide by zero`)
+    } else {
+      print(1 / number)
+    }
+  }
+
+}
+
+// Read a line from stdin somehow and apply main() to it.
+// Details of how it's done are not important for the example.
+main(inputFromStdin)
+```
+
+In this example execution flow of the program looks like this:
+
+<img src="./assets/exceptions/flow1.png" height="45" width="345" />
+
+As you can see program splits in two places. This is happen very often in programs.
+In some cases all branches look neutral, in other cases (like this) we can consider one path as
+a success and another one as a failure. We can make the distinguish more formal by
+introducing an abstraction:
+
+```js
+const Either = {
+  chain(fn, either) {
+    return ('success' in either) ? fn(either.success) : either
+  },
+  fork(onSuccess, onFailure, either) {
+    return 'success' in either ? onSuccess(either.success) : onFailure(either.failure)
+  },
 }
 ```
 
-Then a programmer might misunderstand for some reason how to use this function and pass the `author` object instead of `post` for example:
+Now we can rewrite our example using `Either`:
 
 ```js
-getAuthorAge({age: 28}) // throws an exception because of a bug
+function print(str) {
+  console.log(str)
+}
+
+function parse(str) {
+  const number = parseInt(str, 10)
+  return Number.isNaN(number) ? {failure: `Not a number: ${str}`} : {success: number}
+}
+
+function calc(number) {
+  return number === 0 ? {failure: `Cannot divide by zero`} : {success: 1 / number}
+}
+
+function main(userInput) {
+  const parsed = parse(userInput)
+  const calculated = Either.chain(calc, parsed)
+  Either.fork(print, print, calculated)
+}
 ```
 
-Or, which happens more often, after a refactoring we might for instance change the shape of  `post` object to look like this `{authors: [{age: 28}]}` and forget to update the `getAuthorAge` function.
+In this version flow looks more like the folowing. It looks simpler.
+It looks like we simply write code that cannot fail and Either takes care of managing failure branch.
 
-Of course bugs not always express themselves in form of exceptions, we can get a `NaN` or just see incorrect data in UI. But for the purpose of this article we focus on bugs that lead to exceptions.
+<img src="./assets/exceptions/flow2.png" height="45" width="173" />
 
-To better understand concept of "expected failures" you may read ["Railway oriented programming"](https://fsharpforfunandprofit.com/posts/recipe-part2/). This article does not touch the bugs vs expected failures subject, but explains very well how expected failures (or just failures) can be handled with a right abstraction.
+Maybe this doesn't make much sense to you now (if you're not familiar with Either).
+And this is by no means a complete explanation of Either pattern (check out resources
+I've mentioned above for better explanations). But for the purpose of this article the only
+thing we need to take out of this section is that some paths in program can be
+treated formally or informally as **expected failures**.
 
-## We can't *handle* bugs
+Let's recap. We've split all possible paths in programs to three groups:
 
-When a bug happens the program ends up in an inconsistent state. In other words in a state it should not normally be — in a state that we didn't expect. And all the code that we've written don't expect program to be in such state. From that point we can't make any assuptions about further behavior of the program. We basically have no idea about what is going on (from the point of view of the running program).
+- Expected success is the main happy path of the program,
+  it represents how program behaves when everything goes right.
+- Expected failure is secondary path that represent
+  all expected deviations from happy path e.g., when user gives an incorrect input.
+- Unexpected failure is some *unexpected* deviations from main or secondary paths,
+  something that we call "bugs".
 
-What we would want to do when we *handle* a bug is to transition the program back into one of consistent states. But AFAIK there is only one way to transition a program from an arbitrary inconsistent state to a consistent one — restart it.
 
-An attempt to *handle* may lead to even worse situation — the inconsistent state of an individual instance of a program may leak into the database. In this scenario even a restart may not help. Also if many users are connected to a single database they all may start to experience the bug. So *handling* bugs isn't a particularly good idea.
+## try..catch
 
-## What to do with bugs then
+How does `try..catch` fits into our three code paths groups view? It's great for unexpected failures!
+Or we should say: `throw` great for unexpected failures if we never actually `try..catch`.
+It's very good for debugging. Debugger will pause on the exact line that throws.
+Also if we don't use debugger we still get nice stack trace in console etc. It's sad that in many
+cases when program goes through unexpected path instead of exception we end up with `NaN`
+being propagated through program or something like that. In these cases it's much harder to track
+down where things went wrong, much nicer when it just throws.
 
-Restarting the program seems like a good option. Let's consider it in the contexts of two environments that are most interesting for the purpose of this article: a browser and a Node.js server.
+On the other hand `try..catch` is bad for expected failures. There're many reasons why, but let's
+focus on just one: *it's bad for expected failures because it's already used for unexpected ones.*
+We must handle expected failures, so we would need to `try..catch` function that uses
+`throw` for expected failure. But if we do that we'll catch not only errors that represent
+expected failures, but also random errors that represent bugs. This is bad for two reasons:
 
-In case of a browser reloading the page usually considered as an awful behavior from the UX point of view, so it might be not an option. We may choose not to do something like reloading the page in a hope of providing a better UX at a risk of leaking inconsistent state to the database. Some bugs are indeed not fatal for a web page, and it often may continue to work mostly fine. So this is a trade–off and to not restart is a legitimate option here.
+1. we ruin nice debugging experience (debugger will no longer pause etc);
+2. in our code that is supposed to handle expected failures we would need to also
+   handle unexpected failures (which is generally imposible as shown in the next section).
 
-Also in case of a browser we might want UI to react to the bug somehow. But in case of arbitrary bug there is not much we can do again. In case of an *expected* failure like the incorrect JSON we can handle it very well from UI/UX poit of view — we should show an error message near the exact field in the form, also we may dissable the submit button etc. In case of a bug we don't really know what is going on, so we can only do something like showing a popup with a very vague message. But I think this won't be very helpfull, it may actually be worse than not showing a popup. Maybe user not even going to interact with the part of the program that has broken, and a popup out of nowhere may only damage UX. And if user do interact with the broken part they will notice that it's broken anyway — no need to tell what they already know.
+If throw is used for expected failures in some API, we should wrap into `try..catch` as little code as
+possible, so we won't also catch bugs by accident.
 
-So IMO in case of a browser the best option might be is to do nothing at all about the bug (except one thing, more about which in a bit).
 
-What about Node? First of all, have to say that I'm not really an expert in Node or other server side technologies. But I have some expirience. With that said let's continue. We could restart the server on each unhandled exception, but this is problematic because server usually handles several requests concurently at the same time. So if we restart the server not only request that faced a bug will fail, but all other requests that happen to be handled at the same time will fail as well. Perhaps a better approach, and what is usually done, is to wrap all the code that responsible for handling each request to some sort of `try...catch` block and when a error happens fail only one request. Although we can't use `try...catch` of course because the code is asynchronous. So we should use some async abstraction that can provide this functionality (e.g. Promises).
+## How program should behave in case of unexpected failures
+
+Try..catch provide us with a mechanism for writing code that will be executed in case of *some*
+unexpected failures. Should we use this mechanism and what that code should do?
+
+Let's look at it from theoretical point of view first and dive into practical
+details in next sections.
+
+First of all let's focus on the fact that this mechanism catches only **some** failures.
+In many cases program may not throw but just behave incorrectly in some way.
+In my expirience with JavaScript I'd estimate that it throws only in about 30% of cases.
+So should we even care to use this mechanism if it works only in 30% cases?
+
+If we still want to use it, what the code should do? I can think of two options:
+
+1. Try to completelly recover somehow and keep program running.
+2. Crash / restart program and log / report about the bug.
+
+The `#1` option is simply impossible. We can't transition program from arbitrary
+unexpected (inconsistent) state to an expected (consistent) state. For the simple reason that
+starting state is **unexpected** — we don't know anything about it, because we didn't expect it.
+How could we transition from a state of which we don't know anything to any other state?
+There is one way to do it though — restart the program, which is our `#2` option.
+
+Also any code that is executed in responce to a bug have a potential to make things worse.
+It transitions program to even more complicated inconsistent state. Plus if program continue to run
+the inconsistent state may leak to database. In this scenario even a restart may not help.
+And if many users are connected to a single database they all may start to experience the bug.
+
+The `#2` is often happens automatically (at least crash part), so maybe we don't
+even need to `catch`. But it's ok to cathc for `#2` purposes.
+
+
+## Unexpected failures in Node
+
+We could restart the server on each unhandled exception, but this is problematic because server usually handles several requests concurently at the same time. So if we restart the server not only request that faced a bug will fail, but all other requests that happen to be handled at the same time will fail as well. Some people think a better approach is to wrap all the code that responsible for handling each request to some sort of `try..catch` block and when a error happens fail only one request. Although we can't use `try..catch` of course because the code is asynchronous. So we should use some async abstraction that can provide this functionality (e.g. Promises).
 
 Another option for Node is to let server crash. Yes, this will result in forcefully ending the execution of all other connections, resulting in more than a single user getting an error. But we will benefit from the crash by taking core dumps (`node --abort_on_uncaught_exception`) etc.
 
@@ -68,92 +211,55 @@ Also in Node we can use the `uncaughtException` event combined with a tool like 
 
 > Using naught a worker can use the 'offline' message to announce that it is dying. At this point, naught prevents it from accepting new connections and spawns a replacement worker, allowing the dying worker to finish up with its current connections and do any cleanup necessary before finally perishing.
 
-This is how a bug can be handled in a program. But more importantly we should _fix_ bugs! In order to do so we need to find out about them, therefore a really good idea will be to setup some kind of automated reporting system (e.g. Sentry). This can and should be done in both cases in browser and on the server (this is the _one thing_ I mentioned earlier). Also if we want to debug bugs it's important that code that handles bugs don't stay in our way (more on it later).
+Conclusion: we might want to catch unexpected errors in Node, but there are plenty other options.
 
-## What is problematic about Promises
 
-**Disclaimer:** It's better to think that Promises simply don't support expected failures, and that the failure callback is designed exclusively for uncaught exceptions / bugs. So we should put all expected results (including failures) into success path of Promises. But in this section of the article I'll try to look at Promises as if they were designed to support expected failures.
+## Unexpected failures in browser
 
-Let's first consider the browser environment. As we concluded earlier, the only thing that we want to do with bugs in a browser, is to report about them to a monitoring system. We don't need Promises for this. I don't know exactly how, but **raven-js** can report about all unhadeled exceptions automatically. I think it replaces `console.error()`  or maybe listents to `error` event on `window`, whatever it does it works well. So in the browser **we at least don't need Promises to catch exceptions** that are bugs. The not-bugs exceptions can be handled manually:
+In case of a browser reloading the page usually considered as an awful behavior from the UX point of view, so it might be not an option. We may choose not to do something like reloading the page in a hope of providing a better UX at a risk of leaking inconsistent state to the database. Some bugs are indeed not fatal for a web page, and it often may continue to work mostly fine. So this is a trade–off and to not restart is a legitimate option here.
 
-```js
-// Instead of this
-promise.then(jsonString => JSON.parse(jsonString))
+Also in case of a browser we might want UI to react to the bug somehow. But in case of arbitrary bug there is not much we can do again. In case of an *expected* failure (like the incorrect user input) we can handle it very well from UI/UX poit of view — we should show an error message near the exact field in the form, also we may dissable the submit button etc. In case of a bug we don't really know what is going on, so we can only do something like showing a popup with a very vague message. But I think this won't be very helpfull, it may actually be worse than not showing a popup. Maybe user not even going to interact with the part of the program that has broken, and a popup out of nowhere may only damage UX. And if user do interact with the broken part they will notice that it's broken anyway — no need to tell what they already know.
 
-// We should do this
-promise.then(jsonString => {
-  try {
-    return JSON.parse(jsonString)
-  } catch (e) {
-    return Promise.reject({type: 'incorrect_json'})
-  }
-})
-```
+Conclusion: we have no reason to catch unexpected errors in browser.
 
-Although we don't need Promises to catch exceptions they do it anyway, and this causes some really annoying issues.
 
-**It hurts debugging experience.** In the early days when Promises was second class citizens in browsers it was a nightmare when a bug get caught by a promise. For example I had a really terrible experiences of crawling through some kind of `setImmediate` ponyfill tryning to find the line where exception was thrown originally. But have to admit that nowadays it works quite well. I just tried throwing an exception from `then` in Chrome and debugger paused program on the exact line of the `throw`, just like without Promises. This is very nice! Not sure though how well other browsers/environments handle this. But anyway this is a special treatment that available only to Promises as first class citizens, if we going to add automatic catching to a library we might not be able to provide such a great debugging experience. Also, if we do add `failure` callback to a promise, exception will go into that callback, and this is a whole different story.
+## Promises and expected failures
 
-**Bugs go into the same callback with expected failures.** As mentioned above we don't want bugs to go into any callback at all. Unfortunately in promises we have only one callback for all kinds of failures. If we expect some failures from a promise (like network errors for example), we have to use `failure` callback to handle them. But if we use a `failure` callback everything mentioned about awesome debugging experience is no longer the case. So in the callback we have to separate bugs from the expected failures and handle them differentelly. This is not always easy and needs to be done in every failure callback. Also this [makes it imposible](https://github.com/facebook/flow/issues/1232) to type Promises with type systems like [Flow](https://flowtype.org/) — we have to use type `any` for argument of failure callback. Which BTW makes task of reliably separating expected failures from bugs even harder.
+Promises support two code paths. There're two callbacks in `then` etc.
+Also Promises automatically cathc all exceptions thrown from then's callbacks and put them into
+the next failure callback down the chain.
 
-What about Node environment? As concluded earlier in Node we may want to catch all exceptions related to handling of a particular request, although there other options. So how Promises work may come in handy here. But again it would be better to have a separate callback for bugs because of problems with Flow etc.
+So the second path is already used for unexpected failures.
+That makes it unusable for expected failures (see ["try..catch" section](#trycatch)).
+Promises don't support Railways / Either pattern. If you want to use that pattern with Promises
+you should wrap Either into Promise. To use Promise's second path for this is a terrible idea.
 
-Also automatic catching is needed for `async/await`, the idea is that we want to be able to write a code like this:
 
-```js
-async function() {
-  let foo
+## Should async abstractions support exceptions catching?
 
-  try {
-    foo = await getFoo()
-  } catch (e) {
-    return 'not done, but we don\'t care'
-  }
+From previous sections we've learned that we definitely may want to not catch exceptions at all.
+In this case we get the best debugging experience. Even if abstraction will cathc exceptions and then
+re-throw, it won't be the same as to not catch at all, for instance debugger won't pause on
+the original line of `throw`.
 
-  if (!isCorrectFoo(foo)) {
-    throw new Error('not done, error')
-  }
+But we also may want to catch "async exceptions", in Node wed server case for instance.
+A perfect solution would be optional catching.
 
-  return 'done'
-}
-```
+Not all abstractions can support optional cathcing. If we have to choose between non-optional
+catching and not supporting catching at all we should choose latter.
+Non-optional catching hurts more than helps.
 
-Here we do all sorts of failures handling using what looks like a synchronous code. This looks cool but anyway comes at a price of issues mentioned above. And could be done without using `throw` and `try...catch` actually, just one of possible solutions could look like this:
-
-```js
-async function() {
-
-  // await in this case would "subscribe" to success and failure,
-  // and return either {success} or {failure}
-  const {success: foo, failure} = await getFoo()
-
-  if (failure !== undefined) {
-    return 'not done, but we don\'t care'
-  }
-
-  if (!isCorrectFoo(foo)) {
-    return Promise.reject('not done, error')
-  }
-
-  return 'done'
-}
-```
-
-Let's recap:
-
-- In browser we don't want automatic catching at all
-- In Node we might need it, but would be better if we had a separate callback for exceptions
-- We need it for `async/await`, although spec could be written in a way so we wouldn't need catching
-
-Here is some more criticism on how Promises handle exceptions:
-
-1. http://jlongster.com/Stop-Trying-to-Catch-Me
-2. https://gist.github.com/thejameskyle/1222be21ef1023119222f10666b143aa
+This part seems to be ok in Promises. If we don't provide failure callback in `then` and don't use
+`catch` method it seems that debugger behaves the same way as if error wasn't catched
+(at least in current Chrome). Although it wasn't always this way, previously they've simply
+swallowed exceptions if there wasn't a catch callback.
 
 
 ## How exceptions work in Task
 
-In Task we have best of both worlds. We can choose whether exceptions will be catched or not when we `run()` a task.
+In Task we want to support both railways / Either patern and **optional** errors catching.
+When we `run()` a task we can choose whether errors will be catched or not,
+and if they are catched they go into a separate callback.
 
 ```js
 // exceptions are not catched
@@ -180,11 +286,11 @@ task.run({
 })
 ```
 
-So if `catch` callback isn't provided, we can enjoy great debugging expirience in a browser (even if we have `failure` callback). And in Node we can still catch exceptions in async code if we want to. Also notice that we use a separate callback for exceptions, so no problems with Flow etc.
+So if `catch` callback isn't provided, we can enjoy great debugging expirience in a browser (even if we have `failure` callback). And in Node we can still catch exceptions in async code if we want to. Also notice that we use a separate callback for exceptions, so we won't have to write code that have to handle both expected and unexpected failures.
 
-The default behaviour is to not catch exceptions. This is what we want in browser, and what also may be a legitimate option for Node.
+The default behaviour is to not catch. This is what we want in browser, and what also may be a legitimate option for Node.
 
-In Task the `catch` callback is reserved only for bug-exceptions. Expected exception must be wrappend in a `try...catch` block manually (see example with `JSON.parse()` above). All the API and semantics in Task are designed with this assumption in mind.
+In Task the `catch` callback is reserved only for bug-exceptions. Expected exception must be wrappend in a `try..catch` block manually. All the API and semantics in Task are designed with this assumption in mind.
 
 Exceptions thrown from `success` and `failure` callbacks are never catched, even if `catch` callbacks is provided.
 
