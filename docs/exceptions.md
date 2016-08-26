@@ -8,7 +8,7 @@ The closer to the end the more practical matters are discussed.
 ## Expected and unexpected code paths
 
 In any program (especially in JavaScript) there always expected and unexpected code paths.
-When a program goes by an unexpected path we call it "bug". And when it goes only by expected paths
+When a program goes through an unexpected path we call it "a bug". And when it goes only through expected paths
 is just normal execution of the program. Consider this example:
 
 ```js
@@ -39,7 +39,7 @@ And here is an unexpected path:
 
 We as programmers don't expect this to ever happen with this program.
 But if, for example, we change first condition and forget to change second one program may
-run through the unexpected path. Than would be a bug.
+run through the unexpected path. That would be a bug.
 
 
 ## Railway oriented programming / split expected path in two
@@ -76,7 +76,7 @@ function main(userInput) {
 }
 
 // Read a line from stdin somehow and apply main() to it.
-// Details of how it's done are not important for the example.
+// Details of how it's done are not important for this example.
 main(inputFromStdin)
 ```
 
@@ -123,8 +123,8 @@ function main(userInput) {
 }
 ```
 
-In this version flow looks more like the folowing. It looks simpler.
-It looks like we simply write code that cannot fail and Either takes care of managing failure branch.
+In this version flow looks more like the folowing. It looks simpler, like we simply write code
+that cannot fail and Either takes care of managing failure branch.
 
 <img src="./assets/exceptions/flow2.png" height="60" width="230" />
 
@@ -136,11 +136,11 @@ treated formally or informally as **expected failures**.
 
 Let's recap. We've split all possible paths in programs to three groups:
 
-- Expected success is the main happy path of the program,
+- **Expected success** is the main happy path of the program,
   it represents how program behaves when everything goes right.
-- Expected failure is secondary path that represent
+- **Expected failure** is secondary path that represent
   all expected deviations from happy path e.g., when user gives an incorrect input.
-- Unexpected failure is some *unexpected* deviations from main or secondary paths,
+- **Unexpected failure** is some *unexpected* deviations from main or secondary paths,
   something that we call "bugs".
 
 
@@ -171,9 +171,11 @@ possible, so we won't also catch bugs by accident.
 ## How program should behave in case of unexpected failures
 
 Try..catch provide us with a mechanism for writing code that will be executed in case of *some*
-unexpected failures. Should we use this mechanism and what that code should do?
+unexpected failures. We can just wrap arbitrary code into `try..catch`, and we catch bugs
+that express themselves as exceptions in that code. Should we use this mechanism and what
+handling code in `catch(e) {..}` should do?
 
-Let's look at it from theoretical point of view first and dive into practical
+Let's look at this from theoretical point of view first and dive into practical
 details in next sections.
 
 First of all let's focus on the fact that this mechanism catches only **some** failures.
@@ -181,7 +183,7 @@ In many cases program may not throw but just behave incorrectly in some way.
 In my expirience with JavaScript I'd estimate that it throws only in about 30% of cases.
 So should we even care to use this mechanism if it works only in 30% cases?
 
-If we still want to use it, what the code should do? I can think of two options:
+If we still want to use it, what the handling code should do? I can think of two options:
 
 1. Try to completelly recover somehow and keep program running.
 2. Crash / restart program and log / report about the bug.
@@ -203,7 +205,13 @@ even need to `catch`. But it's ok to cathc for `#2` purposes.
 
 ## Unexpected failures in Node
 
-We could restart the server on each unhandled exception, but this is problematic because server usually handles several requests concurently at the same time. So if we restart the server not only request that faced a bug will fail, but all other requests that happen to be handled at the same time will fail as well. Some people think a better approach is to wrap all the code that responsible for handling each request to some sort of `try..catch` block and when a error happens fail only one request. Although we can't use `try..catch` of course because the code is asynchronous. So we should use some async abstraction that can provide this functionality (e.g. Promises).
+We could restart the server on each unhandled exception, but this is problematic because server
+usually handles several requests concurently at the same time. So if we restart the server
+not only request that have faced a bug will fail, but all other requests that happen to be
+handled at the same time will fail as well. Some people think that a better approach is to wrap all
+the code that responsible for handling each request to some sort of `try..catch` block and when
+a error happens fail only one request. Although we can't use `try..catch` of course because the
+code is asynchronous. So we should use some async abstraction that can provide this functionality (e.g. Promises).
 
 Another option for Node is to let server crash. Yes, this will result in forcefully ending the execution of all other connections, resulting in more than a single user getting an error. But we will benefit from the crash by taking core dumps (`node --abort_on_uncaught_exception`) etc.
 
@@ -216,9 +224,23 @@ Conclusion: we might want to catch unexpected errors in Node, but there are plen
 
 ## Unexpected failures in browser
 
-In case of a browser reloading the page usually considered as an awful behavior from the UX point of view, so it might be not an option. We may choose not to do something like reloading the page in a hope of providing a better UX at a risk of leaking inconsistent state to the database. Some bugs are indeed not fatal for a web page, and it often may continue to work mostly fine. So this is a trade–off and to not restart is a legitimate option here.
+In case of a browser restarting (reloading the page) usually considered as an awful behavior from
+the UX point of view, so it might be not an option. We may choose not to restart in a hope of
+providing a better UX at a risk of leaking inconsistent state to the database etc. Some bugs are
+indeed not fatal for a web page, and it often may continue to work mostly fine. So this is a
+trade–off and to not restart is a legitimate option here.
 
-Also in case of a browser we might want UI to react to the bug somehow. But in case of arbitrary bug there is not much we can do again. In case of an *expected* failure (like the incorrect user input) we can handle it very well from UI/UX poit of view — we should show an error message near the exact field in the form, also we may dissable the submit button etc. In case of a bug we don't really know what is going on, so we can only do something like showing a popup with a very vague message. But I think this won't be very helpfull, it may actually be worse than not showing a popup. Maybe user not even going to interact with the part of the program that has broken, and a popup out of nowhere may only damage UX. And if user do interact with the broken part they will notice that it's broken anyway — no need to tell what they already know.
+Also in case of a browser we might want UI to react to the bug somehow. But in case of arbitrary
+bug there isn't much we can do again. In case of an *expected* failure (like the incorrect user input)
+we can handle it very well from UI/UX poit of view — we should show an error message near the exact
+field in the form, also we may dissable the submit button etc. In case of a bug we don't really know
+what is going on, so we can only do something like showing a popup with a very vague message.
+But I think this won't be very helpfull, it may actually be worse than not showing a popup.
+Maybe user not even going to interact with the part of the program that has broken, and a popup out
+of nowhere may only damage UX. And if user do interact with the broken part they will notice that
+it's broken anyway — no need to tell what they already know. Also if we show a popup user might
+assume that something failed, but now it's all under control and it's safe to continue to use the
+program. But this would be a lie, nothing is under control in case of a bug.
 
 Conclusion: we have no reason to catch unexpected errors in browser.
 
@@ -231,7 +253,7 @@ the next failure callback down the chain.
 
 So the second path is already used for unexpected failures.
 That makes it unusable for expected failures (see ["try..catch" section](#trycatch)).
-Promises don't support Railways / Either pattern. If you want to use that pattern with Promises
+In other words Promises don't support Railways / Either pattern. If you want to use that pattern with Promises
 you should wrap Either into Promise. To use Promise's second path for this is a terrible idea.
 
 
@@ -242,7 +264,7 @@ In this case we get the best debugging experience. Even if abstraction will cath
 re-throw, it won't be the same as to not catch at all, for instance debugger won't pause on
 the original line of `throw`.
 
-But we also may want to catch "async exceptions", in Node wed server case for instance.
+But we also may want to catch "async exceptions", for instance in Node web server case.
 A perfect solution would be optional catching.
 
 Not all abstractions can support optional cathcing. If we have to choose between non-optional
@@ -251,13 +273,13 @@ Non-optional catching hurts more than helps.
 
 This part seems to be ok in Promises. If we don't provide failure callback in `then` and don't use
 `catch` method it seems that debugger behaves the same way as if error wasn't catched
-(at least in current Chrome). Although it wasn't always this way, previously they've simply
-swallowed exceptions if there wasn't a catch callback.
+(at least in current Chrome). Although it wasn't always this way, previously they used to simply
+swallow exceptions if there wasn't a catch callback.
 
 
 ## How exceptions work in Task
 
-In Task we want to support both railways / Either patern and **optional** errors catching.
+In Task we want to support both **optional** errors catching and Railways / Either patern.
 When we `run()` a task we can choose whether errors will be catched or not,
 and if they are catched they go into a separate callback.
 
