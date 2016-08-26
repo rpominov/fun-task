@@ -84,7 +84,7 @@ In this example execution flow of the program looks like this:
 
 <img src="./assets/exceptions/flow1.png" height="60" width="459" />
 
-As you can see program splits in two places. This is happen very often in programs.
+As you can see program splits in two places. This happens very often in programs.
 In some cases all branches look neutral, in other cases (like this) we can consider one path as
 a success and another one as a failure. We can make the distinguish more formal by
 introducing an abstraction:
@@ -95,7 +95,7 @@ const Either = {
     return ('success' in either) ? fn(either.success) : either
   },
   fork(onSuccess, onFailure, either) {
-    return 'success' in either ? onSuccess(either.success) : onFailure(either.failure)
+    return ('success' in either) ? onSuccess(either.success) : onFailure(either.failure)
   },
 }
 ```
