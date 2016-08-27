@@ -164,7 +164,7 @@ expected failures, but also random errors that represent bugs. This is bad for t
 2. in our code that is supposed to handle expected failures we would need to also
    handle unexpected failures (which is generally imposible as shown in the next section).
 
-If a `throw` is used for expected failures in some APIs, we should wrap `try..catch` into as little code as
+If a `throw` is used for expected failures in some APIs, we should wrap inside `try..catch` as little code as
 possible, so we won't also catch bugs by accident.
 
 
@@ -173,7 +173,7 @@ possible, so we won't also catch bugs by accident.
 `Try..catch` provide us with a mechanism for writing code that will be executed in case of *some*
 unexpected failures. We can just wrap arbitrary code into `try..catch`, and we catch bugs
 that express themselves as exceptions in that code. Should we use this mechanism and what
-should the code in `catch(e) {..}` handler do?
+should the code in `catch(e) {..}` do?
 
 Let's look at this from theoretical point of view first and then dive into practical
 details in next sections.
@@ -224,7 +224,7 @@ Conclusion: we might want to catch unexpected errors in Node, but there are plen
 
 ## Unexpected failures in browser
 
-Just as in Node we could "restart" the browser or reload the page. However, that option is usually considered as an awful behavior from
+Just as in Node we could restart the program by reloading the webpage. However, that option is usually considered as an awful behavior from
 the UX point of view. So instead we may choose not to restart in a hope of
 providing a better UX at a risk of leaking inconsistent state to the database, etc. Some bugs are
 indeed not fatal for a web page, and it often may continue to work mostly fine. So this is a
