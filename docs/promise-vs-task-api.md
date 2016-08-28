@@ -14,6 +14,6 @@
 | `task.concat(otherTask)`                 | `Promise.race([promose, otherPromise])`<br/><br/>Aslo mainly for Fantasy Land, makes Task a [Monoid](https://github.com/fantasyland/fantasy-land#monoid) |
 | `Task.parallel(tasks)`                        | `Promise.all(promises)`                  |
 | `Task.race(tasks)`                       | `Promise.race(promises)`                 |
-| `Task.run({success, failure})`         | `Promise.then(success, failure)`     |
-| `Task.run({success, failure, catch})` | `Promise.then(success, failureAndCatch)`<br/><br/>By default tasks don't catch exceptions thrown from `map`, `chain` etc. But we can choose to catch them by providing `catch` callback. Also notice that exceptions go into their own callback. |
+| `Task.run({success, failure})`         | `Promise.then(successOrFailure)` <br/><br/>In Promises second callback is for exceptions. More about it [here](./exceptions.md) |
+| `Task.run({success, failure, catch})` | `Promise.then(successOrFailure, catch)`<br/><br/>By default tasks don't catch exceptions thrown from `map`, `chain` etc. But we can choose to catch them by providing `catch` callback. Also notice that exceptions go into their own callback. |
 | `cancel = task.run(...); cancel()`       | Promises don't support cancelation or even unsubscribing |
