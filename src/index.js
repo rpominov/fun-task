@@ -16,6 +16,11 @@ type LooseHandlers<-S, -F> = Handler<S> | {
 }
 type Computation<+S, +F> = (handleSucc: Handler<S>, handleFail: Handler<F>) => ?Cancel
 
+// This is an incorrect type,
+// but it works for our purposes
+// see https://github.com/facebook/flow/issues/2354
+type Either<+S, +F> = {success: S} | {failure: F}
+
 const defaultFailureHandler: Handler<mixed> = failure => {
   if (failure instanceof Error) {
     throw failure
@@ -196,6 +201,16 @@ export default class Task<+S, +F> {
       ? {success: h, failure: defaultFailureHandler}
       : {success: h.success || noop, failure: h.failure || defaultFailureHandler, catch: h.catch}
     return this._run(handlers)
+  }
+
+  toPromise(options?: {catch: boolean} = {catch: true}): Promise<Either<S,F>> {
+    return new Promise((suc, err) => {
+      this.run({
+        success(x) { suc({success: x}) },
+        failure(x) { suc({failure: x}) },
+        catch: options.catch ? err : undefined,
+      })
+    })
   }
 
   runAndLog(): void {
