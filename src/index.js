@@ -92,25 +92,25 @@ export default class Task<+S, +F> {
   }
 
   // Creates a task that resolves with a given value
-  static of<S, F>(value: S): Task<S, F> {
+  static of<S>(value: S): Task<S, *> {
     return new Of(value)
   }
   // instance alias for Fantasy Land
-  of<S, F>(value: S): Task<S, F> {
+  of<S>(value: S): Task<S, *> {
     return Task.of(value)
   }
 
   // Creates a task that fails with a given error
-  static rejected<S, F>(error: F): Task<S, F> {
+  static rejected<F>(error: F): Task<*, F> {
     return new Rejected(error)
   }
 
   // Creates a task that never completes
-  static empty(): Task<any, any> {
+  static empty(): Task<*, *> {
     return new Empty()
   }
   // instance alias for Fantasy Land
-  empty(): Task<any, any> {
+  empty(): Task<*, *> {
     return Task.empty()
   }
 
@@ -252,7 +252,7 @@ class FromComputation<S, F> extends Task<S, F> {
 
 }
 
-class Of<S> extends Task<S, any> {
+class Of<S> extends Task<S, *> {
 
   _value: S;
 
@@ -261,7 +261,7 @@ class Of<S> extends Task<S, any> {
     this._value = value
   }
 
-  _run(handlers: Handlers<S, any>): Cancel {
+  _run(handlers: Handlers<S, *>): Cancel {
     const {success} = handlers
     success(this._value)
     return noop
@@ -273,7 +273,7 @@ class Of<S> extends Task<S, any> {
 
 }
 
-class Rejected<F> extends Task<any, F> {
+class Rejected<F> extends Task<*, F> {
 
   _error: F;
 
@@ -282,7 +282,7 @@ class Rejected<F> extends Task<any, F> {
     this._error = error
   }
 
-  _run(handlers: Handlers<any, F>): Cancel {
+  _run(handlers: Handlers<*, F>): Cancel {
     const {failure} = handlers
     failure(this._error)
     return noop
@@ -294,7 +294,7 @@ class Rejected<F> extends Task<any, F> {
 
 }
 
-class Empty<S, F> extends Task<S, F> {
+class Empty extends Task<*, *> {
 
   run(): Cancel {
     return noop
