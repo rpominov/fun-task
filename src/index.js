@@ -213,6 +213,10 @@ export default class Task<+S, +F> {
     })
   }
 
+  static fromPromise<S>(promise: Promise<S> | () => Promise<S>): Task<S, *> {
+    return new FromPromise(promise)
+  }
+
   runAndLog(): void {
     this.run({
       success(x) { console.log('Success:', x) }, // eslint-disable-line
@@ -524,4 +528,29 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
   _toString() {
     return `${this._task._toString()}.orElse(..)`
   }
+}
+
+
+class FromPromise<S> extends Task<S, *> {
+
+  _promise: Promise<S> | () => Promise<S>;
+
+  constructor(promise: Promise<S> | () => Promise<S>) {
+    super()
+    this._promise = promise
+  }
+
+  _run(handlers: Handlers<S, *>) {
+    const {_promise} = this
+    const promise = typeof _promise === 'function' ? _promise() : _promise
+    return runHelper((success, _, catch_) => {
+      promise.then(success, catch_)
+      return {}
+    }, handlers)
+  }
+
+  _toString() {
+    return 'fromPromise(..)'
+  }
+
 }

@@ -433,3 +433,45 @@ Task.of(2).toPromise().then(result => {
 
 // > success: 2
 ```
+
+
+## `Task.fromPromise(promise)`
+
+Creates a Task from a Promise.
+
+```js
+Task.fromPromise(Promise.resolve(2)).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// result: 2
+```
+
+The `promise` argument must be either a Promise or a function that wnen called with
+no arguments returns a Promise. If a function is used as `promise` argument,
+that function is executed on each task's run to retrieve a new promise.
+
+```js
+Task.fromPromise(() => Promise.resolve(2)).run({
+  success(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// result: 2
+```
+
+The promise's `success` corresponds to the task's `success`
+and promise's `error` corresponds to the task's `catch`.
+
+```js
+Task.fromPromise(Promise.reject(2)).run({
+  catch(x) {
+    console.log(`error: ${x}`)
+  },
+})
+
+// error: 2
+```

@@ -1,4 +1,5 @@
 // @flow
+/* global Promise */
 
 import _test from 'lobot/test'
 import Task from '../src'
@@ -6,7 +7,7 @@ import Task from '../src'
 const test = _test.wrap('toPromise')
 
 test('returns a Promise', 1, t => {
-  t.ok(Task.of(2).toPromise() instanceof Promise) // eslint-disable-line
+  t.ok(Task.of(2).toPromise() instanceof Promise)
 })
 
 test.async('success works', 1, t => {
