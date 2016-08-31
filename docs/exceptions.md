@@ -261,7 +261,7 @@ the next failure callback down the chain.
 So the second path is already used for unexpected failures.
 That makes it unusable for expected failures (see ["try..catch" section](#trycatch)).
 In other words Promises don't support Railways / Either pattern. If you want to use that pattern with Promises
-you should wrap Either into Promise. To use Promise's second path for this is a terrible idea.
+you should wrap Either into Promise. To use Promise's second path for expected failures is a terrible idea.
 
 
 ## Should async abstractions support exceptions catching?
