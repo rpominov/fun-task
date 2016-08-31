@@ -1,4 +1,5 @@
 // @flow
+/* global Promise */
 
 import _test from 'lobot/test'
 import Task from '../src'
@@ -56,4 +57,8 @@ test('orElse', 1, t => {
 test('ap', 1, t => {
   const str = Task.of(x => x).ap(Task.of(1)).toString()
   t.ok(/^Task\.of\([\s\S]+\)\.chain\(\.\.\)$/.test(str), `String "${str}" doesn't match regex`)
+})
+
+test('fromPromise', 1, t => {
+  t.equals(Task.fromPromise(Promise.resolve(2)).toString(), 'Task.fromPromise(..)')
 })
