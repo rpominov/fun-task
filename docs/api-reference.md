@@ -424,7 +424,11 @@ If `{catch: false}` is passed as `options` the task is run without `catch` callb
 
 ```js
 Task.of(2).toPromise().then(result => {
-  console.log(`success: ${result.success}`)
+  if ('success' in result) {
+    console.log(`success: ${result.success}`)
+  } else {
+    console.log(`failure: ${result.failure}`)
+  }
 })
 
 // > success: 2
