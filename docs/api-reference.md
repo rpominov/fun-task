@@ -413,8 +413,8 @@ Task.of(2).runAndLog()
 ## `task.toPromise([options])`
 
 Runs the task and returns a Promise that represent the result.
-The task's `success` and `failure` branches both correspond to the promise's `success` brach
-[(the `error` branch in Promises is reserved for unexpected failures)](./exceptions.md#promises-and-expected-failures)
+The task's `success` and `failure` branches both correspond to the promise's `success` brach because
+[the `error` branch in Promises is reserved for unexpected failures](./exceptions.md#promises-and-expected-failures).
 The task's `catch` branch correspond to promise's `error`.
 
 The promise's success value is either `{success: s}` or `{failure: f}` where `s` and `f` task's
