@@ -25,7 +25,7 @@ var Task = require('fun-task')
 ### CDN
 
 ```html
-<script src="https://npmcdn.com/fun-task/umd/funTask.js"></script>
+<script src="https://unpkg.com/fun-task/umd/funTask.js"></script>
 <script>
   var Task = window.FunTask
 </script>
