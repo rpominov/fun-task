@@ -25,7 +25,7 @@
     "eslint": "3.4.0",
     "eslint-plugin-flowtype": "2.11.4",
     "flow-bin": "0.31.1",
-    "lobot": "0.1.20"
+    "lobot": "0.1.21"
   },
   "jsnext:main": "lib-es/index.js",
   "files": [
