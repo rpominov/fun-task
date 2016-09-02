@@ -1,4 +1,5 @@
 // @flow
+/* eslint-disable require-yield */
 
 import _test from 'lobot/test'
 import Task from '../src'

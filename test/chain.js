@@ -87,3 +87,13 @@ test('this==undefined in failure cd', 1, t => {
 test('this==undefined in fn', 1, t => {
   Task.of(2).chain(function(x) { t.equal(this, undefined); return Task.of(x) }).run({})
 })
+
+
+Task.of(2).chain(x => x > 10 ? Task.of('') : Task.rejected(true)).run({
+  success(x) {
+    (x: string)
+  },
+  failure(x) {
+    (x: boolean)
+  },
+})
