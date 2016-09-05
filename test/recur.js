@@ -12,3 +12,9 @@ test('works...', 7, t => {
     return x === 0 ? Task.rejected(0) : Task.of(x - 1)
   }).run({failure: t.calledWith(0)})
 })
+
+test('works with a lot of sync iterations', 1, t => {
+  Task.of(50000).recur(x => {
+    return x === 0 ? Task.rejected(0) : Task.of(x - 1)
+  }).run({failure: t.calledWith(0)})
+})

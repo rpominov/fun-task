@@ -549,18 +549,31 @@ class Recur<S1, F1, S, F> extends Task<*, F | F1> {
     const {_fn} = this
     return runHelper((_, failure, catch_) => {
       let cancel = noop
-      const success = x => {
-        let spawned
-        if (catch_) {
-          try {
+      let x
+      let haveNewX = false
+      let inLoop = false
+      const success = _x => {
+        haveNewX = true
+        x = _x
+        if (inLoop) {
+          return
+        }
+        inLoop = true
+        while(haveNewX) {
+          haveNewX = false
+          let spawned
+          if (catch_) {
+            try {
+              spawned = _fn(x)
+            } catch (e) { catch_(e) }
+          } else {
             spawned = _fn(x)
-          } catch (e) { catch_(e) }
-        } else {
-          spawned = _fn(x)
+          }
+          if (spawned) {
+            cancel = spawned.run({success, failure, catch: catch_})
+          }
         }
-        if (spawned) {
-          cancel = spawned.run({success, failure, catch: catch_})
-        }
+        inLoop = false
       }
       cancel = this._task.run({success, failure, catch: catch_})
       return {onCancel() { cancel() }}
