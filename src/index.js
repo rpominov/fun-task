@@ -164,6 +164,10 @@ export default class Task<+S, +F> {
     return new OrElse(this, fn)
   }
 
+  recur<S1, F1>(fn: (x: S | S1) => Task<S1, F1>): Task<*, F | F1> {
+    return new Recur(this, fn)
+  }
+
   // Applies the successful value of task `this` to to the successful value of task `otherTask`
   static ap<A, B, F1, F2>(tf: Task<(x: A) => B, F1>, tx: Task<A, F2>): Task<B, F1 | F2> {
     return tf.chain(f => tx.map(x => f(x)))
@@ -527,6 +531,44 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
 
   _toString() {
     return `${this._task._toString()}.orElse(..)`
+  }
+}
+
+class Recur<S1, F1, S, F> extends Task<*, F | F1> {
+
+  _task: Task<S, F>;
+  _fn: (x: S | S1) => Task<S1, F1>;
+
+  constructor(task: Task<S, F>, fn: (x: S | S1) => Task<S1, F1>) {
+    super()
+    this._task = task
+    this._fn = fn
+  }
+
+  _run(handlers: Handlers<S1, F | F1>): Cancel {
+    const {_fn} = this
+    return runHelper((_, failure, catch_) => {
+      let cancel = noop
+      const success = x => {
+        let spawned
+        if (catch_) {
+          try {
+            spawned = _fn(x)
+          } catch (e) { catch_(e) }
+        } else {
+          spawned = _fn(x)
+        }
+        if (spawned) {
+          cancel = spawned.run({success, failure, catch: catch_})
+        }
+      }
+      cancel = this._task.run({success, failure, catch: catch_})
+      return {onCancel() { cancel() }}
+    }, handlers)
+  }
+
+  _toString() {
+    return `${this._task._toString()}.recur(..)`
   }
 }
 
