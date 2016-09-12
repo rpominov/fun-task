@@ -25,12 +25,21 @@ test('works with rejected + rejected', 1, t => {
   Task.rejected(2).orElse(x => Task.rejected(x + 10)).run({failure: t.calledWith(12)})
 })
 
-test('cancelation works (orig. task)', 1, t => {
+test('cancelation - orig. task', 1, t => {
   Task.create(() => t.calledOnce()).orElse(() => Task.of()).run({})()
 })
 
-test('cancelation works (spawned task)', 1, t => {
+test('cancelation - spawned task - orig. sync', 1, t => {
   Task.rejected().orElse(() => Task.create(() => t.calledOnce())).run({})()
+})
+
+test('cancelation - spawned task - orig. async', 1, t => {
+  let s: any = null
+  const orig = Task.create((_, _s) => {s = _s})
+  const spawned = Task.create(() => t.calledOnce())
+  const cancel = orig.orElse(() => spawned).run({})
+  s()
+  cancel()
 })
 
 test('exception thrown from fn (no catch cb)', 1, t => {

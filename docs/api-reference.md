@@ -198,6 +198,28 @@ Task.rejected(2).orElse(x => Task.of(x * 3)).run({
 // > result: 6
 ```
 
+
+## `task.recur(fn)`
+
+> Static alias: `Task.recur(fn, task)`
+
+`task.recur(fn)` is the same as `task.chain(function f(x) { return fn(x).chain(f) })`,
+but former is safe from infinite call stack growth and memory leaks.
+
+```js
+Task.of(5).recur(x => {
+  x // 5, 4, 3, 2, 1, 0
+  return x === 0 ? Task.rejected('done') : Task.of(x - 1)
+}).run({
+  failure(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: done
+```
+
+
 ## `tFn.ap(tX)`
 
 > Static alias: `Task.ap(tFn, tX)`

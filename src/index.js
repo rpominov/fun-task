@@ -149,7 +149,7 @@ export default class Task<+S, +F> {
   }
 
   // Transforms a task by applying `fn` to the successful value, where `fn` returns a Task
-  static chain<S1, F1>(fn: (x: S) => Task<S1, F1>, task: Task<S, F>): Task<S1, F | F1> {
+  static chain<S, F, S1, F1>(fn: (x: S) => Task<S1, F1>, task: Task<S, F>): Task<S1, F | F1> {
     return new Chain(task, fn)
   }
   chain<S1, F1>(fn: (x: S) => Task<S1, F1>): Task<S1, F | F1> {
@@ -157,13 +157,16 @@ export default class Task<+S, +F> {
   }
 
   // Transforms a task by applying `fn` to the failure value, where `fn` returns a Task
-  static orElse<S1, F1>(fn: (x: F) => Task<S1, F1>, task: Task<S, F>): Task<S | S1, F1> {
+  static orElse<S, F, S1, F1>(fn: (x: F) => Task<S1, F1>, task: Task<S, F>): Task<S | S1, F1> {
     return new OrElse(task, fn)
   }
   orElse<S1, F1>(fn: (x: F) => Task<S1, F1>): Task<S | S1, F1> {
     return new OrElse(this, fn)
   }
 
+  static recur<S, F, S1, F1>(fn: (x: S | S1) => Task<S1, F1>, task: Task<S, F>): Task<*, F | F1> {
+    return new Recur(task, fn)
+  }
   recur<S1, F1>(fn: (x: S | S1) => Task<S1, F1>): Task<*, F | F1> {
     return new Recur(this, fn)
   }
@@ -465,8 +468,9 @@ class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
   _run(handlers: Handlers<SOut, F | F1>): Cancel {
     const {_fn} = this
     return runHelper((success, failure, catch_) => {
-      let cancel2 = noop
-      const cancel1 = this._task.run({
+      let cancel = noop
+      let spawnedHasBeenRun = false
+      const cancel1 = this._task.run({ // #1
         success(x) {
           let spawned
           if (catch_) {
@@ -477,13 +481,17 @@ class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
             spawned = _fn(x)
           }
           if (spawned) {
-            cancel2 = spawned.run({success, failure, catch: catch_})
+            cancel = spawned.run({success, failure, catch: catch_}) // #2
+            spawnedHasBeenRun = true
           }
         },
         failure,
         catch: catch_,
       })
-      return {onCancel() { cancel1(); cancel2() }}
+      if (!spawnedHasBeenRun) { // #2 run() may return before #1 run() returns
+        cancel = cancel1
+      }
+      return {onCancel() { cancel() }}
     }, handlers)
   }
 
@@ -506,8 +514,9 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
   _run(handlers: Handlers<S | S1, FOut>): Cancel {
     const {_fn} = this
     return runHelper((success, failure, catch_) => {
-      let cancel2 = noop
-      const cancel1 = this._task.run({
+      let cancel = noop
+      let spawnedHasBeenRun = false
+      const cancel1 = this._task.run({ // #1
         success,
         failure(x) {
           let spawned
@@ -519,12 +528,16 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
             spawned = _fn(x)
           }
           if (spawned) {
-            cancel2 = spawned.run({success, failure, catch: catch_})
+            cancel = spawned.run({success, failure, catch: catch_}) // #2
+            spawnedHasBeenRun = true
           }
         },
         catch: catch_,
       })
-      return {onCancel() { cancel1(); cancel2() }}
+      if (!spawnedHasBeenRun) { // #2 run() may return before #1 run() returns
+        cancel = cancel1
+      }
+      return {onCancel() { cancel() }}
     }, handlers)
 
   }
@@ -548,10 +561,19 @@ class Recur<S1, F1, S, F> extends Task<*, F | F1> {
   _run(handlers: Handlers<S1, F | F1>): Cancel {
     const {_fn} = this
     return runHelper((_, failure, catch_) => {
-      let cancel = noop
       let x
       let haveNewX = false
       let inLoop = false
+      let sharedLastRunToken = null
+      let sharedCancel = noop
+      const runSpawned = spawned => {
+        const lastRunToken = {}
+        sharedLastRunToken = lastRunToken
+        const cancel = spawned.run({success, failure, catch: catch_})
+        if (sharedLastRunToken === lastRunToken) {
+          sharedCancel = cancel
+        }
+      }
       const success = _x => {
         haveNewX = true
         x = _x
@@ -570,13 +592,13 @@ class Recur<S1, F1, S, F> extends Task<*, F | F1> {
             spawned = _fn(x)
           }
           if (spawned) {
-            cancel = spawned.run({success, failure, catch: catch_})
+            runSpawned(spawned)
           }
         }
         inLoop = false
       }
-      cancel = this._task.run({success, failure, catch: catch_})
-      return {onCancel() { cancel() }}
+      runSpawned(this._task)
+      return {onCancel() { sharedCancel() }}
     }, handlers)
   }
 

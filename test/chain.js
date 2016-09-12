@@ -21,12 +21,21 @@ test('works with rejected + of', 1, t => {
   Task.rejected(2).chain(x => Task.of(x + 10)).run({failure: t.calledWith(2)})
 })
 
-test('cancelation works (orig. task)', 1, t => {
+test('cancelation - orig. task', 1, t => {
   Task.create(() => t.calledOnce()).chain(() => Task.of()).run({})()
 })
 
-test('cancelation works (spawned task)', 1, t => {
+test('cancelation - spawned task - orig. sync', 1, t => {
   Task.of().chain(() => Task.create(() => t.calledOnce())).run({})()
+})
+
+test('cancelation - spawned task - orig. async', 1, t => {
+  let s: any = null
+  const orig = Task.create(_s => {s = _s})
+  const spawned = Task.create(() => t.calledOnce())
+  const cancel = orig.chain(() => spawned).run({})
+  s()
+  cancel()
 })
 
 test('exception thrown from fn (no catch cb)', 1, t => {
@@ -88,6 +97,8 @@ test('this==undefined in fn', 1, t => {
   Task.of(2).chain(function(x) { t.equal(this, undefined); return Task.of(x) }).run({})
 })
 
+
+// Flow
 
 Task.of(2).chain(x => x > 10 ? Task.of('') : Task.rejected(true)).run({
   success(x) {
