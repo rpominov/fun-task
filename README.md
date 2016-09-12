@@ -86,9 +86,9 @@ immediately, the computation starts only when `task.run()` is called
 
 ## Documentation
 
-- [API reference](docs/api-reference.md)
-- [How exceptions catching work in Task](docs/exceptions.md#how-exceptions-work-in-task)
-- [API comparison with Promises](docs/promise-vs-task-api.md)
+- [API reference](https://github.com/rpominov/fun-task/blob/master/docs/api-reference.md)
+- [How exceptions catching work in Task](https://github.com/rpominov/fun-task/blob/master/docs/exceptions.md#how-exceptions-work-in-task)
+- [API comparison with Promises](https://github.com/rpominov/fun-task/blob/master/docs/promise-vs-task-api.md)
 
 ## [Flow](https://flowtype.org/)
 
