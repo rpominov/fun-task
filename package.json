@@ -22,8 +22,8 @@
   "devDependencies": {
     "babel-eslint": "6.1.2",
     "babel-polyfill": "6.13.0",
-    "eslint": "3.4.0",
-    "eslint-plugin-flowtype": "2.15.0",
+    "eslint": "3.5.0",
+    "eslint-plugin-flowtype": "2.16.1",
     "flow-bin": "0.32.0",
     "lobot": "0.1.21"
   },
