@@ -229,7 +229,7 @@ Task.chainRec((next, done, x) => {
   x // 5, 4, 3, 2, 1, 0
   return x === 0 ? Task.of(done('done')) : Task.of(next(x - 1))
 }, 5).run({
-  failure(x) {
+  success(x) {
     console.log(`result: ${x}`)
   },
 })
