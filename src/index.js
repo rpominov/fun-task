@@ -21,6 +21,11 @@ interface Result<+S, +F> {
   failure?: F,
 }
 
+type ChainRecNext<T> = {type: 'next', value: T}
+type ChainRecDone<T> = {type: 'done', value: T}
+const chainRecNext = <T>(x: T): ChainRecNext<T> => ({type: 'next', value: x})
+const chainRecDone = <T>(x: T): ChainRecDone<T> => ({type: 'done', value: x})
+
 const defaultFailureHandler: Handler<mixed> = failure => {
   if (failure instanceof Error) {
     throw failure
@@ -169,6 +174,17 @@ export default class Task<+S, +F> {
   }
   recur<S1, F1>(fn: (x: S | S1) => Task<S1, F1>): Task<*, F | F1> {
     return new Recur(this, fn)
+  }
+
+  static chainRec<N, D, F>(
+    fn: (
+      next: (x: N) => ChainRecNext<N>,
+      done: (x: D) => ChainRecDone<D>,
+      v: N
+    ) => Task<ChainRecNext<N> | ChainRecDone<D>, F>,
+    initial: N
+  ): Task<D, F> {
+    return new CahinRec(fn, initial)
   }
 
   // Applies the successful value of task `this` to to the successful value of task `otherTask`
@@ -605,6 +621,80 @@ class Recur<S1, F1, S, F> extends Task<*, F | F1> {
   _toString() {
     return `${this._task._toString()}.recur(..)`
   }
+}
+
+
+class CahinRec<N, D, F> extends Task<D, F> {
+
+  _fn: (
+    next: (x: N) => ChainRecNext<N>,
+    done: (x: D) => ChainRecDone<D>,
+    v: N
+  ) => Task<ChainRecNext<N> | ChainRecDone<D>, F>;
+  _initial: N;
+
+  constructor(
+    fn: (
+      next: (x: N) => ChainRecNext<N>,
+      done: (x: D) => ChainRecDone<D>,
+      v: N
+    ) => Task<ChainRecNext<N> | ChainRecDone<D>, F>,
+    initial: N
+  ) {
+    super()
+    this._fn = fn
+    this._initial = initial
+  }
+
+  _run(handlers: Handlers<D, F>): Cancel {
+    const {_fn, _initial} = this
+    return runHelper((success, failure, catch_) => {
+      let newNext = null
+      let haveNewNext = false
+      let inLoop = false
+      let sharedCancel = noop
+      let sharedLastRunToken = null
+      const step = (result) => {
+        if (result.type === 'done') {
+          success(result.value)
+          return
+        }
+        newNext = result.value
+        haveNewNext = true
+        if (inLoop) {
+          return
+        }
+        inLoop = true
+        while(haveNewNext) {
+          haveNewNext = false
+          let spawned
+          if (catch_) {
+            try {
+              spawned = _fn(chainRecNext, chainRecDone, newNext)
+            } catch (e) { catch_(e) }
+          } else {
+            spawned = _fn(chainRecNext, chainRecDone, newNext)
+          }
+          if (spawned) {
+            const lastRunToken = {}
+            sharedLastRunToken = lastRunToken
+            const cancel = spawned.run({success: step, failure, catch: catch_})
+            if (sharedLastRunToken === lastRunToken) {
+              sharedCancel = cancel
+            }
+          }
+        }
+        inLoop = false
+      }
+      step(chainRecNext(_initial))
+      return {onCancel() { sharedCancel() }}
+    }, handlers)
+  }
+
+  _toString() {
+    return `Task.chainRec(..)`
+  }
+
 }
 
 

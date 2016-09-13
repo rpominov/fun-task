@@ -3,6 +3,15 @@
 import _test from 'lobot/test'
 import Task from '../src'
 
+function computeMaxCallStackSize() {
+  try {
+    return 1 + computeMaxCallStackSize()
+  } catch (e) {
+    return 1
+  }
+}
+const MAX_STACK_SIZE = computeMaxCallStackSize()
+
 const test = _test.wrap('recur')
 
 const later = x => Task.create(s => { setTimeout(() => { s(x) }) })
@@ -57,7 +66,7 @@ test.async('count down async', 7, t => {
 })
 
 test('works with a lot of sync iterations', 1, t => {
-  Task.of(500000).recur(x => {
+  Task.of(MAX_STACK_SIZE + 1).recur(x => {
     return x === 0 ? Task.rejected(0) : Task.of(x - 1)
   }).run({failure: t.calledWith(0)})
 })

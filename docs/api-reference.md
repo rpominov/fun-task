@@ -219,6 +219,23 @@ Task.of(5).recur(x => {
 // > result: done
 ```
 
+## `Task.chainRec(fn, initial)`
+
+Implementation of [Fantasy Land's `ChainRec`](https://github.com/fantasyland/fantasy-land#chainrec).
+Covers similar use-case as `task.recur()` but in a spec compatible way.
+
+```js
+Task.chainRec((next, done, x) => {
+  x // 5, 4, 3, 2, 1, 0
+  return x === 0 ? Task.of(done('done')) : Task.of(next(x - 1))
+}, 5).run({
+  failure(x) {
+    console.log(`result: ${x}`)
+  },
+})
+
+// > result: done
+```
 
 ## `tFn.ap(tX)`
 
