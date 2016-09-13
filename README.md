@@ -122,6 +122,7 @@ Task is compatible with [Fantasy Land](https://github.com/fantasyland/fantasy-la
 - [Apply](https://github.com/fantasyland/fantasy-land#apply)
 - [Applicative](https://github.com/fantasyland/fantasy-land#applicative)
 - [Chain](https://github.com/fantasyland/fantasy-land#chain)
+- [ChainRec](https://github.com/fantasyland/fantasy-land#chainrec)
 - [Monad](https://github.com/fantasyland/fantasy-land#monad)
 
 ## Development
