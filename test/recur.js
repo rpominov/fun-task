@@ -78,7 +78,7 @@ test('exception thrown from fn (no catch cb)', 1, t => {
 })
 
 test('exception thrown from fn (with catch cb)', 1, t => {
-  Task.of().chain(() => { throw 2 }).run({catch: t.calledWith(2)})
+  Task.of().recur(() => { throw 2 }).run({catch: t.calledWith(2)})
 })
 
 const thrower1 = Task.create(() => { throw new Error('err1') })

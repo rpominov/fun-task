@@ -692,7 +692,7 @@ class CahinRec<N, D, F> extends Task<D, F> {
   }
 
   _toString() {
-    return `Task.chainRec(..)`
+    return `chainRec(..)`
   }
 
 }

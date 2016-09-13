@@ -54,6 +54,14 @@ test('orElse', 1, t => {
   t.equals(Task.rejected(1).orElse(x => Task.of(x)).toString(), 'Task.rejected(1).orElse(..)')
 })
 
+test('recur', 1, t => {
+  t.equals(Task.of(1).recur(x => Task.of(x)).toString(), 'Task.of(1).recur(..)')
+})
+
+test('chainRec', 1, t => {
+  t.equals(Task.chainRec(() => Task.rejected(), 1).toString(), 'Task.chainRec(..)')
+})
+
 test('ap', 1, t => {
   const str = Task.of(x => x).ap(Task.of(1)).toString()
   t.ok(/^Task\.of\([\s\S]+\)\.chain\(\.\.\)$/.test(str), `String "${str}" doesn't match regex`)
