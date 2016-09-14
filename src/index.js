@@ -184,10 +184,10 @@ export default class Task<+S, +F> {
     ) => Task<ChainRecNext<N> | ChainRecDone<D>, F>,
     initial: N
   ): Task<D, F> {
-    return new CahinRec(fn, initial)
+    return new ChainRec(fn, initial)
   }
 
-  // Applies the successful value of task `this` to to the successful value of task `otherTask`
+  // Applies the successful value of task `this` to the successful value of task `otherTask`
   static ap<A, B, F1, F2>(tf: Task<(x: A) => B, F1>, tx: Task<A, F2>): Task<B, F1 | F2> {
     return tf.chain(f => tx.map(x => f(x)))
   }
@@ -624,7 +624,7 @@ class Recur<S1, F1, S, F> extends Task<*, F | F1> {
 }
 
 
-class CahinRec<N, D, F> extends Task<D, F> {
+class ChainRec<N, D, F> extends Task<D, F> {
 
   _fn: (
     next: (x: N) => ChainRecNext<N>,
