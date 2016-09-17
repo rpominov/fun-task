@@ -23,7 +23,7 @@
     "babel-eslint": "6.1.2",
     "babel-polyfill": "6.13.0",
     "eslint": "3.5.0",
-    "eslint-plugin-flowtype": "2.16.1",
+    "eslint-plugin-flowtype": "2.18.1",
     "flow-bin": "0.32.0",
     "lobot": "0.1.21"
   },
@@ -34,7 +34,7 @@
     "umd"
   ],
   "dependencies": {
-    "static-land": "0.1.8"
+    "static-land": "1.0.0"
   },
   "keywords": [
     "task",
