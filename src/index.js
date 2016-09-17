@@ -1,6 +1,7 @@
 // @flow
 
 import {runGenerator} from 'static-land'
+import fl from 'fantasy-land'
 
 type Cancel = () => void
 type Handler<-T> = (x: T) => void
@@ -100,10 +101,6 @@ export default class Task<+S, +F> {
   static of<S>(value: S): Task<S, *> {
     return new Of(value)
   }
-  // instance alias for Fantasy Land
-  of<S>(value: S): Task<S, *> {
-    return Task.of(value)
-  }
 
   // Creates a task that fails with a given error
   static rejected<F>(error: F): Task<*, F> {
@@ -113,10 +110,6 @@ export default class Task<+S, +F> {
   // Creates a task that never completes
   static empty(): Task<*, *> {
     return new Empty()
-  }
-  // instance alias for Fantasy Land
-  empty(): Task<*, *> {
-    return Task.empty()
   }
 
   // Given array of tasks creates a task of array
@@ -248,6 +241,29 @@ export default class Task<+S, +F> {
   }
 
 }
+
+/* Wo should put Fantasy Land methods to class like this:
+ *
+ *   class Task {
+ *     'fantasy-land/of'<S>(value: S): Task<S, *> { return Task.of(value) }
+ *   }
+ *
+ * but unfortunately Flow yields "literal properties not yet supported".
+ */
+function makeFLCompatible(constructor: any) {
+  constructor.prototype[fl.of] = constructor[fl.of] = constructor.of
+  constructor.prototype[fl.empty] = constructor[fl.empty] = constructor.empty
+  constructor.prototype[fl.chainRec] = constructor[fl.chainRec] = constructor.chainRec
+  constructor.prototype[fl.concat] = constructor.prototype.concat
+  constructor.prototype[fl.map] = constructor.prototype.map
+  constructor.prototype[fl.bimap] = constructor.prototype.bimap
+  constructor.prototype[fl.ap] = constructor.prototype.ap
+  constructor.prototype[fl.chain] = constructor.prototype.chain
+}
+
+makeFLCompatible(Task)
+
+
 
 class FromComputation<S, F> extends Task<S, F> {
 

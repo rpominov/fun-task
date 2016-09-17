@@ -34,6 +34,7 @@
     "umd"
   ],
   "dependencies": {
+    "fantasy-land": "1.0.1",
     "static-land": "1.0.0"
   },
   "keywords": [

@@ -12,7 +12,3 @@ test('passes value to cb', 1, t => {
 test('this==undefined in cd', 1, t => {
   Task.of(2).run(function() { t.equal(this, undefined) })
 })
-
-test('instance method works', 1, t => {
-  Task.of(1).of(3).run(t.calledWith(3))
-})
