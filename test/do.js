@@ -6,6 +6,15 @@ import Task from '../src'
 
 import 'babel-polyfill'
 
+function computeMaxCallStackSize() {
+  try {
+    return 1 + computeMaxCallStackSize()
+  } catch (e) {
+    return 1
+  }
+}
+const MAX_STACK_SIZE = computeMaxCallStackSize()
+
 const test = _test.wrap('do')
 
 test('works in simpliest case', 1, t => {
@@ -30,4 +39,14 @@ test('works in next to simpliest case', 1, t => {
     const y: any = yield Task.of(3)
     return Task.of(x * y)
   }).run(t.calledWith(6))
+})
+
+test('works with big loops', 1, t => {
+  Task.do(function* () {
+    let i:any = MAX_STACK_SIZE + 2
+    while (i !== 0) {
+      i = yield Task.of(i - 1)
+    }
+    return Task.of(i)
+  }).run(t.calledWith(0))
 })
