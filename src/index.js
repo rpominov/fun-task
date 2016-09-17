@@ -191,8 +191,8 @@ export default class Task<+S, +F> {
   static ap<A, B, F1, F2>(tf: Task<(x: A) => B, F1>, tx: Task<A, F2>): Task<B, F1 | F2> {
     return tf.chain(f => tx.map(x => f(x)))
   }
-  ap<F1>(otherTask: Task<mixed, F1>): Task<mixed, F | F1> {
-    return this.chain(f => otherTask.map(x => (f: any)(x)))
+  ap<F1, S1>(otherTask: Task<(x: S) => S1, F1>): Task<S1, F | F1> {
+    return otherTask.chain(f => this.map(x => f(x)))
   }
 
   // Selects the earlier of the two tasks

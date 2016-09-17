@@ -63,7 +63,7 @@ test('chainRec', 1, t => {
 })
 
 test('ap', 1, t => {
-  const str = Task.of(x => x).ap(Task.of(1)).toString()
+  const str = Task.of(1).ap(Task.of(x => x)).toString()
   t.ok(/^Task\.of\([\s\S]+\)\.chain\(\.\.\)$/.test(str), `String "${str}" doesn't match regex`)
 })
 
