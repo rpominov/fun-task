@@ -295,7 +295,7 @@ class Of<S> extends Task<S, *> {
   }
 
   _toString() {
-    return `of(${String(this._value)})`
+    return 'of(..)'
   }
 
 }
@@ -316,7 +316,7 @@ class Rejected<F> extends Task<*, F> {
   }
 
   _toString() {
-    return `rejected(${String(this._error)})`
+    return 'rejected(..)'
   }
 
 }
