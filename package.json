@@ -23,9 +23,9 @@
     "babel-eslint": "6.1.2",
     "babel-polyfill": "6.13.0",
     "eslint": "3.5.0",
-    "eslint-plugin-flowtype": "2.18.1",
+    "eslint-plugin-flowtype": "2.18.2",
     "flow-bin": "0.32.0",
-    "lobot": "0.1.21"
+    "lobot": "0.1.22"
   },
   "jsnext:main": "lib-es/index.js",
   "files": [
