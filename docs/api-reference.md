@@ -237,7 +237,7 @@ Task.chainRec((next, done, x) => {
 // > result: done
 ```
 
-## `tFn.ap(tX)`
+## `tX.ap(tFn)`
 
 > Static alias: `Task.ap(tFn, tX)`
 
@@ -245,7 +245,7 @@ Applies the successful value of task `tFn` to to the successful value of task `t
 Uses `chain` under the hood, if you need parallel execution use `parallel`.
 
 ```js
-Task.of(x => x * 3).ap(Task.of(2)).run({
+Task.of(Task.of(2)).ap(x => x * 3).run({
   success(x) {
     console.log(`result: ${x}`)
   },
