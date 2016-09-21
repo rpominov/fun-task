@@ -82,6 +82,41 @@ const runHelper = <S, F>(body: RunHelperBody<S, F>, handlers: Handlers<S, F>): C
   return () => { onCancel(); close() }
 }
 
+function isTask(maybeTask: mixed): boolean {
+  return maybeTask instanceof Task
+}
+
+function isFun(maybeFunction: mixed): boolean {
+  return typeof maybeFunction === 'function'
+}
+
+function isArrayOfTasks(maybeArray: mixed): boolean {
+  if (!Array.isArray(maybeArray)) {
+    return false
+  }
+  for (let i = 0; i < maybeArray.length; i++) {
+    if (!(maybeArray[i] instanceof Task)) {
+      return false
+    }
+  }
+  return true
+}
+
+function isThenableOrFn(maybeThenable: mixed): boolean {
+  return typeof maybeThenable === 'function' ||
+    (
+      typeof maybeThenable === 'object' &&
+      maybeThenable !== null &&
+      typeof maybeThenable.then === 'function'
+    )
+}
+
+function inv(shouldBeTrue: boolean, errorMessage: string, actualValue: any): void {
+  if (!shouldBeTrue) {
+    throw new TypeError(`${errorMessage}. Actual value: ${actualValue}`)
+  }
+}
+
 
 
 export default class Task<+S, +F> {
@@ -94,6 +129,7 @@ export default class Task<+S, +F> {
 
   // Creates a task with an arbitrary computation
   static create<S, F>(computation: Computation<S, F>): Task<S, F> {
+    inv(isFun(computation), 'Task.create(f): f is not a function', computation)
     return new FromComputation(computation)
   }
 
@@ -114,58 +150,80 @@ export default class Task<+S, +F> {
 
   // Given array of tasks creates a task of array
   static parallel<S, F>(tasks: Array<Task<S, F>>): Task<S[], F> {
+    inv(isArrayOfTasks(tasks), 'Task.parallel(a): a is not an array of tasks', tasks)
     return new Parallel(tasks)
   }
 
   // Given array of tasks creates a task that completes with the earliest value or error
-  static race<S, F>(task: Array<Task<S, F>>): Task<S, F> {
-    return new Race(task)
+  static race<S, F>(tasks: Array<Task<S, F>>): Task<S, F> {
+    inv(isArrayOfTasks(tasks), 'Task.race(a): a is not an array of tasks', tasks)
+    return new Race(tasks)
   }
 
   // Transforms a task by applying `fn` to the successful value
   static map<S1>(fn: (x: S) => S1, task: Task<S, F>): Task<S1, F> {
+    inv(isFun(fn), 'Task.map(f, _): f is not a function', fn)
+    inv(isTask(task), 'Task.map(_, t): t is not a task', task)
     return new Map(task, fn)
   }
   map<S1>(fn: (x: S) => S1): Task<S1, F> {
+    inv(isFun(fn), 'task.map(f): f is not a function', fn)
     return new Map(this, fn)
   }
 
   // Transforms a task by applying `fn` to the failure value
   static mapRejected<F1>(fn: (x: F) => F1, task: Task<S, F>): Task<S, F1> {
+    inv(isFun(fn), 'Task.mapRejected(f, _): f is not a function', fn)
+    inv(isTask(task), 'Task.mapRejected(_, t): t is not a task', task)
     return new MapRejected(task, fn)
   }
   mapRejected<F1>(fn: (x: F) => F1): Task<S, F1> {
+    inv(isFun(fn), 'task.mapRejected(f): f is not a function', fn)
     return new MapRejected(this, fn)
   }
 
   // Transforms a task by applying `sf` to the successful value or `ff` to the failure value
   static bimap<S1, F1>(ff: (x: F) => F1, fs: (x: S) => S1, task: Task<S, F>): Task<S1, F1> {
+    inv(isFun(ff), 'Task.bimap(f, _, _): f is not a function', ff)
+    inv(isFun(fs), 'Task.bimap(_, f, _): f is not a function', fs)
+    inv(isTask(task), 'Task.bimap(_, _, t): t is not a task', task)
     return task.map(fs).mapRejected(ff)
   }
   bimap<S1, F1>(ff: (x: F) => F1, fs: (x: S) => S1): Task<S1, F1> {
+    inv(isFun(ff), 'task.bimap(f, _): f is not a function', ff)
+    inv(isFun(fs), 'task.bimap(_, f): f is not a function', fs)
     return this.map(fs).mapRejected(ff)
   }
 
   // Transforms a task by applying `fn` to the successful value, where `fn` returns a Task
   static chain<S, F, S1, F1>(fn: (x: S) => Task<S1, F1>, task: Task<S, F>): Task<S1, F | F1> {
+    inv(isFun(fn), 'Task.chain(f, _): f is not a function', fn)
+    inv(isTask(task), 'Task.chain(_, t): t is not a task', task)
     return new Chain(task, fn)
   }
   chain<S1, F1>(fn: (x: S) => Task<S1, F1>): Task<S1, F | F1> {
+    inv(isFun(fn), 'task.chain(f): f is not a function', fn)
     return new Chain(this, fn)
   }
 
   // Transforms a task by applying `fn` to the failure value, where `fn` returns a Task
   static orElse<S, F, S1, F1>(fn: (x: F) => Task<S1, F1>, task: Task<S, F>): Task<S | S1, F1> {
+    inv(isFun(fn), 'Task.orElse(f, _): f is not a function', fn)
+    inv(isTask(task), 'Task.orElse(_, t): t is not a task', task)
     return new OrElse(task, fn)
   }
   orElse<S1, F1>(fn: (x: F) => Task<S1, F1>): Task<S | S1, F1> {
+    inv(isFun(fn), 'task.orElse(f): f is not a function', fn)
     return new OrElse(this, fn)
   }
 
   static recur<S, F, S1, F1>(fn: (x: S | S1) => Task<S1, F1>, task: Task<S, F>): Task<*, F | F1> {
+    inv(isFun(fn), 'Task.recur(f, _): f is not a function', fn)
+    inv(isTask(task), 'Task.recur(_, t): t is not a task', task)
     return new Recur(task, fn)
   }
   recur<S1, F1>(fn: (x: S | S1) => Task<S1, F1>): Task<*, F | F1> {
+    inv(isFun(fn), 'task.recur(f): f is not a function', fn)
     return new Recur(this, fn)
   }
 
@@ -177,26 +235,34 @@ export default class Task<+S, +F> {
     ) => Task<ChainRecNext<N> | ChainRecDone<D>, F>,
     initial: N
   ): Task<D, F> {
+    inv(isFun(fn), 'Task.chainRec(f, _): f is not a function', fn)
     return new ChainRec(fn, initial)
   }
 
   // Applies the successful value of task `this` to the successful value of task `otherTask`
   static ap<A, B, F1, F2>(tf: Task<(x: A) => B, F1>, tx: Task<A, F2>): Task<B, F1 | F2> {
+    inv(isTask(tf), 'Task.ap(t, _): t is not a task', tf)
+    inv(isTask(tx), 'Task.ap(_, t): t is not a task', tx)
     return tf.chain(f => tx.map(x => f(x)))
   }
   ap<F1, S1>(otherTask: Task<(x: S) => S1, F1>): Task<S1, F | F1> {
+    inv(isTask(otherTask), 'task.ap(t): t is not a task', otherTask)
     return otherTask.chain(f => this.map(x => f(x)))
   }
 
   // Selects the earlier of the two tasks
   static concat<S1, F1, S2, F2>(a: Task<S1, F1>, b: Task<S2, F2>): Task<S1 | S2, F1 | F2> {
+    inv(isTask(a), 'Task.concat(t, _): t is not a task', a)
+    inv(isTask(b), 'Task.concat(_, t): t is not a task', b)
     return Task.race([a, b])
   }
   concat<S1, F1>(otherTask: Task<S1, F1>): Task<S | S1, F | F1> {
+    inv(isTask(otherTask), 'task.concat(t): t is not a task', otherTask)
     return Task.race([this, otherTask])
   }
 
   static do(generator: () => Generator<Task<any, any>, Task<any, any>, mixed>): Task<mixed, mixed> {
+    inv(isFun(generator), 'Task.do(f): f is not a function', generator)
     return runGenerator(Task, generator)
   }
 
@@ -230,6 +296,7 @@ export default class Task<+S, +F> {
   }
 
   static fromPromise<S>(promise: Promise<S> | () => Promise<S>): Task<S, *> {
+    inv(isThenableOrFn(promise), 'Task.fromPromise(p): p is not a promise', promise)
     return new FromPromise(promise)
   }
 
