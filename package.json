@@ -1,6 +1,6 @@
 {
   "name": "fun-task",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "An abstraction for managing asynchronous code in JS",
   "main": "lib/index.js",
   "scripts": {
