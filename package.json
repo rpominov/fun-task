@@ -7,6 +7,7 @@
     "lobot": "lobot",
     "lint": "eslint .",
     "test": "eslint . && flow check && lobot test",
+    "test:watch-fast": "IGNORE_SLOW_TESTS=1 lobot test watch",
     "preversion": "cp src/index.js lib/index.js.flow"
   },
   "repository": {
@@ -34,8 +35,7 @@
     "umd"
   ],
   "dependencies": {
-    "fantasy-land": "1.0.1",
-    "static-land": "1.0.0"
+    "fantasy-land": "1.0.1"
   },
   "keywords": [
     "task",

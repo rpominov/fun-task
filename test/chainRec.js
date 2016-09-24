@@ -68,10 +68,12 @@ test.async('count down async', 7, t => {
   Task.chainRec(fn, 5).run({success: t.calledWith(0)})
 })
 
-test('works with a lot of sync iterations', 1, t => {
-  const fn = (n, d, x) => x === 0 ? Task.of(d(x)) : Task.of(n(x - 1))
-  Task.chainRec(fn, MAX_STACK_SIZE + 1).run({success: t.calledWith(0)})
-})
+if (!process.env.IGNORE_SLOW_TESTS) {
+  test('works with a lot of sync iterations', 1, t => {
+    const fn = (n, d, x) => x === 0 ? Task.of(d(x)) : Task.of(n(x - 1))
+    Task.chainRec(fn, MAX_STACK_SIZE + 1).run({success: t.calledWith(0)})
+  })
+}
 
 test('exception thrown from fn (no catch cb)', 1, t => {
   t.throws(() => {

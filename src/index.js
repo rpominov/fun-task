@@ -1,6 +1,5 @@
 // @flow
 
-import {runGenerator} from 'static-land'
 import fl from 'fantasy-land'
 
 type Cancel = () => void
@@ -263,7 +262,7 @@ export default class Task<+S, +F> {
 
   static do(generator: () => Generator<Task<any, any>, Task<any, any>, mixed>): Task<mixed, mixed> {
     inv(isFun(generator), 'Task.do(f): f is not a function', generator)
-    return runGenerator(Task, generator)
+    return new Do(generator)
   }
 
   _run(handlers: Handlers<S, F>): Cancel { // eslint-disable-line
@@ -776,6 +775,65 @@ class ChainRec<N, D, F> extends Task<D, F> {
 
   _toString() {
     return `chainRec(..)`
+  }
+
+}
+
+
+class Do extends Task<mixed, mixed> {
+
+  _generator: () => Generator<Task<any, any>, Task<any, any>, mixed>;
+
+  constructor(generator: () => Generator<Task<any, any>, Task<any, any>, mixed>) {
+    super()
+    this._generator = generator
+  }
+
+  _run(handlers: Handlers<mixed, mixed>): Cancel {
+    const {_generator} = this
+    return runHelper((success, failure, catch_) => {
+      const iterator = _generator()
+      let x
+      let haveNewX = false
+      let inLoop = false
+      let sharedLastRunToken = null
+      let sharedCancel = noop
+      const step = _x => {
+        haveNewX = true
+        x = _x
+        if (inLoop) {
+          return
+        }
+        inLoop = true
+        while(haveNewX) {
+          haveNewX = false
+          let iteratorNext
+          if (catch_) {
+            try {
+              iteratorNext = iterator.next(x)
+            } catch (e) { catch_(e) }
+          } else {
+            iteratorNext = iterator.next(x)
+          }
+          if (iteratorNext) {
+            const {value: spawned, done} = iteratorNext
+            const lastRunToken = {}
+            sharedLastRunToken = lastRunToken
+            const cancel = (spawned: any).run({success: done ? success : step, failure, catch: catch_})
+            if (sharedLastRunToken === lastRunToken) {
+              sharedCancel = cancel
+            }
+          }
+        }
+        inLoop = false
+      }
+      step(undefined)
+      return {onCancel() { sharedCancel() }}
+    }, handlers)
+  }
+
+  _toString() {
+    return `do(..)`
   }
 
 }

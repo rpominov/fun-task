@@ -69,3 +69,7 @@ test('ap', 1, t => {
 test('fromPromise', 1, t => {
   t.equals(Task.fromPromise(Promise.resolve(2)).toString(), 'Task.fromPromise(..)')
 })
+
+test('do', 1, t => {
+  t.equals(Task.do(function*(){yield Task.of(1); return Task.of(1)}).toString(), 'Task.do(..)')
+})
