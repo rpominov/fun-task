@@ -564,11 +564,11 @@ class Chain<SIn, SOut, F, F1> extends Task<SOut, F1 | F> {
   }
 
   _run(handlers: Handlers<SOut, F | F1>): Cancel {
-    const {_fn} = this
+    const {_fn, _task} = this
     return runHelper((success, failure, catch_) => {
       let cancel = noop
       let spawnedHasBeenRun = false
-      const cancel1 = this._task.run({ // #1
+      const cancel1 = _task.run({ // #1
         success(x) {
           let spawned
           if (catch_) {
@@ -610,11 +610,11 @@ class OrElse<S, S1, FIn, FOut> extends Task<S | S1, FOut> {
   }
 
   _run(handlers: Handlers<S | S1, FOut>): Cancel {
-    const {_fn} = this
+    const {_fn, _task} = this
     return runHelper((success, failure, catch_) => {
       let cancel = noop
       let spawnedHasBeenRun = false
-      const cancel1 = this._task.run({ // #1
+      const cancel1 = _task.run({ // #1
         success,
         failure(x) {
           let spawned
@@ -657,21 +657,13 @@ class Recur<S1, F1, S, F> extends Task<*, F | F1> {
   }
 
   _run(handlers: Handlers<S1, F | F1>): Cancel {
-    const {_fn} = this
+    const {_fn, _task} = this
     return runHelper((_, failure, catch_) => {
       let x
       let haveNewX = false
       let inLoop = false
-      let sharedLastRunToken = null
+      let spawnedHasBeenRun = false
       let sharedCancel = noop
-      const runSpawned = spawned => {
-        const lastRunToken = {}
-        sharedLastRunToken = lastRunToken
-        const cancel = spawned.run({success, failure, catch: catch_})
-        if (sharedLastRunToken === lastRunToken) {
-          sharedCancel = cancel
-        }
-      }
       const success = _x => {
         haveNewX = true
         x = _x
@@ -690,12 +682,16 @@ class Recur<S1, F1, S, F> extends Task<*, F | F1> {
             spawned = _fn(x)
           }
           if (spawned) {
-            runSpawned(spawned)
+            sharedCancel = spawned.run({success, failure, catch: catch_}) // #2
+            spawnedHasBeenRun = true
           }
         }
         inLoop = false
       }
-      runSpawned(this._task)
+      const cancel = _task.run({success, failure, catch: catch_}) // #1
+      if (!spawnedHasBeenRun) { // #2 run() may return before #1 run() returns
+        sharedCancel = cancel
+      }
       return {onCancel() { sharedCancel() }}
     }, handlers)
   }
@@ -735,7 +731,6 @@ class ChainRec<N, D, F> extends Task<D, F> {
       let haveNewNext = false
       let inLoop = false
       let sharedCancel = noop
-      let sharedLastRunToken = null
       const step = (result) => {
         if (result.type === 'done') {
           success(result.value)
@@ -758,12 +753,7 @@ class ChainRec<N, D, F> extends Task<D, F> {
             spawned = _fn(chainRecNext, chainRecDone, newNext)
           }
           if (spawned) {
-            const lastRunToken = {}
-            sharedLastRunToken = lastRunToken
-            const cancel = spawned.run({success: step, failure, catch: catch_})
-            if (sharedLastRunToken === lastRunToken) {
-              sharedCancel = cancel
-            }
+            sharedCancel = spawned.run({success: step, failure, catch: catch_})
           }
         }
         inLoop = false
@@ -796,7 +786,6 @@ class Do extends Task<mixed, mixed> {
       let x
       let haveNewX = false
       let inLoop = false
-      let sharedLastRunToken = null
       let sharedCancel = noop
       const step = _x => {
         haveNewX = true
@@ -817,12 +806,7 @@ class Do extends Task<mixed, mixed> {
           }
           if (iteratorNext) {
             const {value: spawned, done} = iteratorNext
-            const lastRunToken = {}
-            sharedLastRunToken = lastRunToken
-            const cancel = (spawned: any).run({success: done ? success : step, failure, catch: catch_})
-            if (sharedLastRunToken === lastRunToken) {
-              sharedCancel = cancel
-            }
+            sharedCancel = (spawned: any).run({success: done ? success : step, failure, catch: catch_})
           }
         }
         inLoop = false
