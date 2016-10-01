@@ -53,24 +53,24 @@ test('1 sync iteration (2 runs)', 2, t => {
 
 test('2 sync iterations', 1, t => {
   Task.do(function* () {
-    const x: any = yield Task.of(2)
-    const y: any = yield Task.of(3)
+    const x = yield Task.of(2)
+    const y = yield Task.of(3)
     return Task.of(x * y)
   }).run(t.calledWith(6))
 })
 
 test.async('2 async iterations', 1, t => {
   Task.do(function* () {
-    const x: any = yield later(2)
-    const y: any = yield later(3)
+    const x = yield later(2)
+    const y = yield later(3)
     return Task.of(x * y)
   }).run(t.calledWith(6))
 })
 
 test('2 sync iterations (2 runs)', 2, t => {
   const task = Task.do(function* () {
-    const x: any = yield Task.of(2)
-    const y: any = yield Task.of(3)
+    const x = yield Task.of(2)
+    const y = yield Task.of(3)
     return Task.of(x * y)
   })
   task.run(t.calledWith(6))
@@ -100,7 +100,7 @@ test('cancelation (1 returned)', 1, t => {
 })
 
 test('cancelation (1 returned, async yield)', 1, t => {
-  let s: any = null
+  let s = null
   const zero = Task.create(_s => {s = _s})
   const first = Task.create(() => t.calledOnce())
   const cancel = Task.do(function* () {
@@ -114,7 +114,7 @@ test('cancelation (1 returned, async yield)', 1, t => {
 test('count down sync', 7, t => {
   const stub = t.calledWith(5, 4, 3, 2, 1, 0)
   Task.do(function* () {
-    let n: any = 5
+    let n = 5
     while (n > 0) {
       stub(n)
       n = yield Task.of(n - 1)
@@ -127,7 +127,7 @@ test('count down sync', 7, t => {
 test.async('count down async', 7, t => {
   const stub = t.calledWith(5, 4, 3, 2, 1, 0)
   Task.do(function* () {
-    let n: any = 5
+    let n = 5
     while (n > 0) {
       stub(n)
       n = yield later(n - 1)
@@ -152,7 +152,7 @@ test('part of generator after `yield rejected` is not executed', 1, t => {
 if (!process.env.IGNORE_SLOW_TESTS) {
   test('works with big loops', 1, t => {
     Task.do(function* () {
-      let i:any = MAX_STACK_SIZE + 2
+      let i = MAX_STACK_SIZE + 2
       while (i !== 0) {
         i = yield Task.of(i - 1)
       }
