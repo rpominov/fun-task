@@ -4,22 +4,24 @@ import fl from 'fantasy-land'
 
 type Cancel = () => void
 type Handler<-T> = (x: T) => void
-type Handlers<-S, -F> = {
+type Handlers<-S, -F> = {|
   success: Handler<S>,
   failure: Handler<F>,
   catch?: Handler<any>,
-}
-type LooseHandlers<-S, -F> = Handler<S> | {
+|}
+type LooseHandlers<-S, -F> = Handler<S> | {|
   success?: Handler<S>,
   failure?: Handler<F>,
   catch?: Handler<any>,
-}
+|}
 type Computation<+S, +F> = (handleSucc: Handler<S>, handleFail: Handler<F>) => ?Cancel
 
 interface Result<+S, +F> {
   success?: S,
   failure?: F,
 }
+
+type ExtractSucc = <S>(t: Task<S, *>) => S
 
 type ChainRecNext<T> = {type: 'next', value: T}
 type ChainRecDone<T> = {type: 'done', value: T}
@@ -35,10 +37,10 @@ const defaultFailureHandler: Handler<mixed> = failure => {
 }
 const noop = () => {}
 
-type RunHelperBody<S, F> = (s: Handler<S>, f: Handler<F>, c?: Handler<any>) => {
+type RunHelperBody<S, F> = (s: Handler<S>, f: Handler<F>, c?: Handler<any>) => {|
   onCancel?: Cancel, // called only when user cancels
   onClose?: Cancel, // called when user cancels plus when succ/fail/catch are called
-}
+|}
 const runHelper = <S, F>(body: RunHelperBody<S, F>, handlers: Handlers<S, F>): Cancel => {
   let {success, failure, catch: catch_} = handlers
   let onCancel = noop
@@ -148,7 +150,7 @@ export default class Task<+S, +F> {
   }
 
   // Given array of tasks creates a task of array
-  static parallel<S, F>(tasks: Array<Task<S, F>>): Task<S[], F> {
+  static parallel<F, S, A: Array<Task<S, F>>>(tasks: A): Task<$TupleMap<A, ExtractSucc>, F> {
     inv(isArrayOfTasks(tasks), 'Task.parallel(a): a is not an array of tasks', tasks)
     return new Parallel(tasks)
   }
@@ -308,7 +310,7 @@ export default class Task<+S, +F> {
 
 }
 
-/* Wo should put Fantasy Land methods to class like this:
+/* We should put Fantasy Land methods to class like this:
  *
  *   class Task {
  *     'fantasy-land/of'<S>(value: S): Task<S, *> { return Task.of(value) }

@@ -64,3 +64,24 @@ test('this==undefined in success cd', 1, t => {
 test('this==undefined in failure cd', 1, t => {
   Task.parallel([Task.rejected(2)]).run({failure() { t.equal(this, undefined) }})
 })
+
+
+// Flow tests
+
+/* eslint-disable no-unused-vars */
+
+const t1: Task<[number, string], *> = Task.parallel([Task.of(2), Task.of('')])
+
+// $FlowFixMe
+const t2: Task<[number, number], *> = Task.parallel([Task.of(2), Task.of('')])
+
+Task.parallel([Task.of(2), Task.of('')]).run({success(xs) {
+  (xs[0]: number);
+  (xs[1]: string);
+  // $FlowFixMe
+  (xs[0]: string);
+  // $FlowFixMe
+  (xs[1]: number);
+}})
+
+/* eslint-enable no-unused-vars */

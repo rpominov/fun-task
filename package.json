@@ -21,11 +21,12 @@
   },
   "homepage": "https://github.com/rpominov/fun-task#readme",
   "devDependencies": {
-    "babel-eslint": "6.1.2",
-    "babel-polyfill": "6.13.0",
-    "eslint": "3.5.0",
-    "eslint-plugin-flowtype": "2.18.2",
-    "flow-bin": "0.32.0",
+    "babel-core": "6.16.0",
+    "babel-eslint": "7.0.0",
+    "babel-polyfill": "6.16.0",
+    "eslint": "3.7.0",
+    "eslint-plugin-flowtype": "2.19.0",
+    "flow-bin": "0.33.0",
     "lobot": "0.1.22"
   },
   "jsnext:main": "lib-es/index.js",
