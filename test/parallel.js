@@ -75,13 +75,20 @@ const t1: Task<[number, string], *> = Task.parallel([Task.of(2), Task.of('')])
 // $FlowFixMe
 const t2: Task<[number, number], *> = Task.parallel([Task.of(2), Task.of('')])
 
-Task.parallel([Task.of(2), Task.of('')]).run({success(xs) {
+Task.parallel([Task.of(2), Task.of('')]).run((xs) => {
   (xs[0]: number);
   (xs[1]: string);
   // $FlowFixMe
   (xs[0]: string);
   // $FlowFixMe
   (xs[1]: number);
-}})
+})
+
+function f() {
+  const strArr: Array<Task<string, *>> = (null: any)
+  Task.parallel(strArr).run((xs: Array<string>) => {})
+  // $FlowFixMe
+  Task.parallel(strArr).run((xs: Array<number>) => {})
+}
 
 /* eslint-enable no-unused-vars */
