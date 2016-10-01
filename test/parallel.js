@@ -71,9 +71,12 @@ test('this==undefined in failure cd', 1, t => {
 /* eslint-disable no-unused-vars */
 
 const t1: Task<[number, string], *> = Task.parallel([Task.of(2), Task.of('')])
-
 // $FlowFixMe
 const t2: Task<[number, number], *> = Task.parallel([Task.of(2), Task.of('')])
+
+const t3: Task<[*, *], number | string> = Task.parallel([Task.rejected(2), Task.rejected('')])
+// $FlowFixMe
+const t4: Task<[*, *], number> = Task.parallel([Task.rejected(2), Task.rejected('')])
 
 Task.parallel([Task.of(2), Task.of('')]).run((xs) => {
   (xs[0]: number);
