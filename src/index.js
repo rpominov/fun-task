@@ -37,10 +37,10 @@ const defaultFailureHandler: Handler<mixed> = failure => {
 }
 const noop = () => {}
 
-type RunHelperBody<S, F> = (s: Handler<S>, f: Handler<F>, c?: Handler<any>) => {|
+type RunHelperBody<S, F> = (s: Handler<S>, f: Handler<F>, c?: Handler<any>) => {
   onCancel?: Cancel, // called only when user cancels
   onClose?: Cancel, // called when user cancels plus when succ/fail/catch are called
-|}
+}
 const runHelper = <S, F>(body: RunHelperBody<S, F>, handlers: Handlers<S, F>): Cancel => {
   let {success, failure, catch: catch_} = handlers
   let onCancel = noop
