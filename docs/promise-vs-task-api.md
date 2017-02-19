@@ -11,7 +11,7 @@
 | `task.orElse(fn)`                        | `promise.then(undefined, fn)`            |
 | `task.ap(otherTask)`                     | `promise.then(fn => otherPromise.then(fn))`<br/><br/>This method exists mainly for compliance with [Fantasy Land Specification](https://github.com/fantasyland/fantasy-land).<br/><br/>With Promises behaviour is different if `fn` returns a Promise.  |
 | `Task.empty()`                           | `new Promise(() => {})`                  |
-| `task.concat(otherTask)`                 | `Promise.race([promose, otherPromise])`<br/><br/>Aslo mainly for Fantasy Land, makes Task a [Monoid](https://github.com/fantasyland/fantasy-land#monoid). |
+| `task.concat(otherTask)`                 | `Promise.race([promose, otherPromise])`<br/><br/>Also mainly for Fantasy Land, makes Task a [Monoid](https://github.com/fantasyland/fantasy-land#monoid). |
 | `Task.parallel(tasks)`                        | `Promise.all(promises)`                  |
 | `Task.race(tasks)`                       | `Promise.race(promises)`                 |
 | `Task.run({success, failure})`         | `Promise.then(successOrFailure)` <br/><br/>In Promises second callback is for exceptions. More about it [here](./exceptions.md). |
