@@ -38,7 +38,7 @@ Task is an abstraction similar to Promises. The key difference is that a
 Task represents a computation while a Promise represents only a result of a computation.
 If we have a Task we can: start the computation; terminate it before it's finished;
 or wait until it finishes, and get the result. While with a Promise we can only get the result.
-This difference doen't make Tasks *better*, they are just different, we can
+This difference doesn't make Tasks *better*, they are just different, we can
 find legitimate use cases for both abstractions. Let's review it again:
 
 If we have a Task:
