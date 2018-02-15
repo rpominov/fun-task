@@ -46,7 +46,7 @@ If we have a Task:
 - We can start the computation that it represents (e.g. a network request)
 - We can choose not to start the computation and just throw task away
 - We can start it more than once
-- While computation is running, we can notify it that we don't interested in the result any more,
+- While computation is running, we can notify it that we're not interested in the result any more,
 and as a response computation may choose to terminate itself
 - When computation finishes we get the result
 
