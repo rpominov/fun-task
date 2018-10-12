@@ -245,7 +245,7 @@ Applies the successful value of task `tFn` to to the successful value of task `t
 Uses `chain` under the hood, if you need parallel execution use `parallel`.
 
 ```js
-Task.of(Task.of(2)).ap(x => x * 3).run({
+Task.of(2).ap(Task.of(x => x * 3)).run({
   success(x) {
     console.log(`result: ${x}`)
   },
