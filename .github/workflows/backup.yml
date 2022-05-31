@@ -1,0 +1,20 @@
+name: Backup
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Backup to BitBucket
+        uses: rpominov/git-backup-action@v2
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.BITBUCKET_PRIVATE_KEY }}
+          REMOTE: "git@bitbucket.org:rpominov/fun-task_backup.git"
